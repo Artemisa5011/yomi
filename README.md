@@ -1,5 +1,16 @@
+⸸ Yomi No Hana — Templo Fúnebre ⸸
+
+App web para gestionar servicios funerarios y reservas de cementerio, con React + Vite + Tailwind y Supabase (Auth + Postgres + RLS + Realtime).
+Incluye UX con toasts, manejo de errores, rutas protegidas, Realtime en 2 entidades, y Optimistic Update con rollback.
 # React + Vite
 
+- Scripts disponibles:
+npm run dev
+npm run build
+npm run preview
+npm run lint
+- Entidades: Empleados, Clientes,Lotes, Servicios funerarios y reservas cementerio
+-   
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
