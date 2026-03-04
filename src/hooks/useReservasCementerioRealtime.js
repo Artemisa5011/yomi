@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import * as api from '../api/reservasCementerioApi' /* importacion de las reservas del cementerio */
 
-/* Reservas del cementerio */
-function mergeById(list, item) { /* funcion para mergear las reservas del cementerio */
+/* Retornar las reservas del cementerio */
+function mergeById(list, item) { /* Mergear las reservas del cementerio */
   if (!item) return list
   if (item.estado_pago !== 'confirmado') return list.filter((r) => r.id !== item.id)
   const idx = list.findIndex((r) => r.id === item.id)
@@ -11,11 +11,11 @@ function mergeById(list, item) { /* funcion para mergear las reservas del cement
   else next.push(item)
   return next
 }
-/* Eliminar reservas del cementerio */
+/* Remover reservas del cementerio */
 function removeById(list, id) {
   return list.filter((r) => r.id !== id)
 }
-/* funcion para retornar las reservas del cementerio */
+/* Retornar reservas del cementerio */
 export function useReservasCementerioRealtime() {
   const [reservas, setReservas] = useState([])
   const [loading, setLoading] = useState(true)
@@ -28,9 +28,9 @@ export function useReservasCementerioRealtime() {
         setLoading(false)
       }
     }).catch(() => {
-      if (mounted) setLoading(false)
+      if (mounted) setLoading(false) 
     })
-    /* Suscribir las reservas del cementerio */
+    /* Suscribir reservas del cementerio */
     const unsub = api.subscribeReservasCementerioRealtime(
       (row) => setReservas((prev) => mergeById(prev, row)),
       (id) => setReservas((prev) => removeById(prev, id))

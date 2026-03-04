@@ -4,15 +4,17 @@ import Layout from '../components/Layout'
 import Seccion from '../components/Seccion'
 import * as clientesApi from '../api/clientesApi'
 import toast from 'react-hot-toast'
-/* funcion para retornar el layout de la pagina de cliente editar */
+
+/* Layout de la pagina de cliente editar */
 export default function ClienteEditar() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [form, setForm] = useState({ telefono: '', correo: '', departamento: '', ciudad: '' }) /* funcion para retornar el formulario de cliente editar */
-  const [loading, setLoading] = useState(true) /* funcion para retornar el estado de carga */ 
-  const [saving, setSaving] = useState(false) /* funcion para retornar el estado de guardado */
+  const [loading, setLoading] = useState(true) /* Estado de carga */ 
+  const [saving, setSaving] = useState(false) /* Estado de guardado */
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
+/* funcion para cargar el cliente por id */
   useEffect(() => {
     const cargar = async () => {
       try {
@@ -32,7 +34,7 @@ export default function ClienteEditar() {
     }
     cargar()
   }, [id, navigate])
-  /* funcion para manejar el submit del formulario */
+  /* Manejar el submit del formulario */
   const handleSubmit = async (e) => {
     e.preventDefault()
     const backup = { ...form }
@@ -88,7 +90,7 @@ export default function ClienteEditar() {
               className="flex-1 rounded-full py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold disabled:opacity-50">
               GUARDAR
             </button>
-            /* funcion para retornar el boton de cancelar */
+            {/* funcion para retornar el boton de cancelar */}
             <button type="button" onClick={() => navigate('/dashboard')}
               className="rounded-full py-2 px-6 border border-red-600 text-red-400">
               Cancelar

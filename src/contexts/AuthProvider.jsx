@@ -1,29 +1,51 @@
 import { useEffect, useState } from 'react'
 import { AuthContext } from './authContext'
 import { supabase } from '../lib/supabase'
-/* funcion para retornar el provider de autenticacion */
+/* Retornar el provider de autenticacion */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  /* funcion para cargar el usuario */
+  const [rol, setRol] = useState(null)
+  /* Cargar el usuario */
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    const cargarPerfil = async (u) => {
+      if (!u) {
+        setRol(null)
+        return
+      }
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('rol')
+        .eq('user_id', u.id)
+        .single()
+      if (error) {
+        // Fallback: si aún no ejecutaste db/007_roles_portal.sql
+        setRol(2)
+        return
+      }
+      setRol(data?.rol ?? 2)
+    }
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const u = session?.user ?? null
+      setUser(u)
+      await cargarPerfil(u)
       setLoading(false)
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
+      const u = session?.user ?? null
+      setUser(u)
+      cargarPerfil(u).finally(() => setLoading(false))
     })
     return () => subscription?.unsubscribe()
   }, [])
-  /* funcion para iniciar sesion */
+  /* Iniciar sesion */
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     return data
   }
-  /* funcion para registrar un usuario */
+  /* Registrar un usuario */
   const signUp = async (email, password, metadata = {}) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -33,20 +55,24 @@ export function AuthProvider({ children }) {
     if (error) throw error
     return data
   }
-  /* funcion para cerrar sesion */
+  /* Cerrar sesion */
   const signOut = async () => {
     await supabase.auth.signOut()
   }
-  /* funcion para retornar el valor del contexto */
+  /* Retornar el valor del contexto */
   const value = {
     user,
     loading,
+    rol,
+    isAdmin: rol === 666,
+    isVendedor: rol === 2 || rol === 666,
+    isCliente: rol === 3,
     signIn,
     signUp,
     signOut,
     isAuthenticated: !!user
   }
-  /* funcion para retornar el contexto de autenticacion */
+  /* Retornar el contexto de autenticacion */
   return (
     <AuthContext.Provider value={value}>
       {children}

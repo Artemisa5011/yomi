@@ -10,6 +10,22 @@ export async function listReservasConfirmadas() {
   if (error) throw parseError(error)
   return data || []
 }
+/* listar reservas del usuario */
+export async function listMisReservas() {
+  const { data, error } = await supabase
+    .from('reservas_cementerio')
+    .select('*, lotes(nombre, codigo)')
+    .eq('estado_pago', 'confirmado')
+    .order('created_at', { ascending: false })
+  if (error) throw parseError(error)
+  return data || []
+}
+/* Obtener el id del usuario del portal por cedula */
+export async function getPortalUserIdByCedula(cedula) {
+  const { data, error } = await supabase.rpc('get_portal_user_id_by_cedula', { p_cedula: cedula })
+  if (error) throw parseError(error)
+  return data || null
+}
 /* Crear una reserva */
 export async function createReserva(payload) {
   const { error } = await supabase.from('reservas_cementerio').insert(payload)
@@ -18,7 +34,7 @@ export async function createReserva(payload) {
     '23514': 'Datos no válidos. Revisa método de pago y nombre del condenado.'
   })
 }
-/* Actualizar una reserva */
+/* Actualizar reserva */
 export async function updateReserva(id, payload) {
   const { error } = await supabase
     .from('reservas_cementerio')
@@ -26,7 +42,7 @@ export async function updateReserva(id, payload) {
     .eq('id', id)
   if (error) throw parseError(error)
 }
-/* Suscribirse reservas cementerio Realtime */
+/* Suscribirse a las reservas de cementerio en tiempo real */
 export function subscribeReservasCementerioRealtime(onUpsert, onRemove) {
   const channel = supabase
     .channel('reservas-cementerio-realtime')
