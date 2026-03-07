@@ -1,14 +1,10 @@
--- ============================================
--- Roles + Portal Cliente (Opción recomendada)
+-- Roles + Portal Cliente
 -- - Admin: rol 666
 -- - Vendedor: rol 2 (default)
 -- - Cliente portal: rol 3 (registro público)
---
 -- Ejecutar después de:
 -- 001_schema.sql, 002_rls.sql, 003_realtime.sql, 004_reglas_negocio.sql
 -- (y después de 006_valor_total.sql si lo usas)
--- ============================================
-
 -- 1) Tabla de perfiles/roles (no depende de app_metadata editable)
 CREATE TABLE IF NOT EXISTS public.user_profiles (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,

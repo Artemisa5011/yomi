@@ -1,8 +1,6 @@
--- ============================================
 -- Test de la Sombra Absoluta
 -- - Guarda resultado espiritual por reserva
 -- - Bloquea cambio de lote después del "juicio"
--- ============================================
 
 ALTER TABLE public.reservas_cementerio
 ADD COLUMN IF NOT EXISTS sombra_pecado VARCHAR(20),
