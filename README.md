@@ -45,7 +45,7 @@ La pagina es SPA - Single Page Applications Permite cambiar entre diferentes vis
 
 5. **Crear el primer admin (rol 666)**
 
-   - En Supabase, crea un usuario (Authentication → Users) con el correo que usarás como admin, por ejemplo `davidosiris88@gmail.com`.
+   - En Supabase, crea un usuario (Authentication → Users) con el correo que usarás como admin, por ejemplo `contactoinfernal@yominohana.com`.
    - Luego, en SQL Editor, ejecuta:
 
    ```sql
