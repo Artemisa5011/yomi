@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/useAuth'
 import * as empleadosApi from '../api/empleadosApi'
 import toast from 'react-hot-toast'
-/* funcion para retornar el layout de la pagina de registro */
+
+/* Retornar el layout de la pagina de registro */
 export default function Registro() {
   const [form, setForm] = useState({
     cedula: '',
@@ -15,18 +16,22 @@ export default function Registro() {
   const [loading, setLoading] = useState(false) /* funcion para retornar el estado de carga */
   const { signUp } = useAuth()
   const navigate = useNavigate()
-  /* funcion para manejar el cambio de formulario */
+
+  /* Manejar el cambio de formulario */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
-  /* funcion para manejar el submit del formulario */
+
+  /* Manejar el submit del formulario */
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.cedula || !form.nombre_completo || !form.correo || !form.password) {
       toast.error('⛧ Completa todos los campos obligatorios')
       return
     }
-    setLoading(true) /* funcion para cargar el formulario */
+
+    /* funcion para cargar el formulario */
+    setLoading(true) 
     try {
       const { data, error } = await signUp(form.correo, form.password, {
         cedula: form.cedula,
@@ -34,10 +39,11 @@ export default function Registro() {
         telefono: form.telefono
       })
       if (error) throw error
+
       /* funcion para crear el empleado */
       if (data?.user) {
         try {
-          /* funcion para crear el empleado */
+          
           await empleadosApi.createEmpleado({
             user_id: data.user.id,
             cedula: form.cedula.trim(),
@@ -49,7 +55,7 @@ export default function Registro() {
           if (empError.code === '23505') toast.error('Ya existe un vendedor con esa cédula')
           else throw empError
         }
-      }/* funcion para mostrar el mensaje de exito */
+      }/* Mostrar el mensaje de exito */
       toast.success('⸸ Registro completado. Inicia sesión ⸸')
       navigate('/login')
     } catch (err) {
@@ -58,7 +64,7 @@ export default function Registro() {
       setLoading(false)
     }
   }
-  /* funcion para retornar el layout de la pagina de registro */
+  /* Retornar el layout de la pagina de registro */
   return (
     <div className="min-h-screen flex items-center justify-center py-12">
       <div className="w-full max-w-md mx-4 p-8 rounded-3xl border-4 border-red-900/60 bg-black/80 shadow-[0_-5px_25px_rgba(255,0,0,0.3)]">

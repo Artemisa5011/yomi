@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AuthContext } from './authContext'
 import { supabase } from '../lib/supabase'
-/* Retornar el provider de autenticacion */
+/* Retornar el provider de autenticacion iniciar/cerrar */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)

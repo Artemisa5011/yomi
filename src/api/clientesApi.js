@@ -19,7 +19,7 @@ export async function getClienteByCedula(cedula) {
   if (error && error.code !== 'PGRST116') throw parseError(error)
   return { data, notFound: error?.code === 'PGRST116' }
 }
-/* Por id */
+/* Cliente por id */
 export async function getClienteById(id) {
   const { data, error } = await supabase
     .from('clientes')

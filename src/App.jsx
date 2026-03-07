@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthProvider'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import VideoBackground from './components/VideoBackground'
+
 /* importacion de las paginas */
 import Inicio from './pages/Inicio'
 import Login from './pages/Login'
@@ -12,7 +13,8 @@ import ClienteNuevo from './pages/ClienteNuevo'
 import ClienteEditar from './pages/ClienteEditar'
 import Funeraria from './pages/Funeraria'
 import Cementerio from './pages/Cementerio'
-/* funcion para retornar el layout de la aplicacion */
+
+/* Retornar el layout de la aplicacion */
 export default function App() {
   return (
     <AuthProvider>
@@ -33,7 +35,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          /* funcion para retornar el layout de la pagina de cliente nuevo */
+          {/* Layout de la pagina de cliente nuevo */}
           <Route
             path="/clientes/nuevo"
             element={
@@ -42,7 +44,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          /* funcion para retornar el layout de la pagina de cliente editar */
+          {/* Layout de la pagina de cliente editar */}
           <Route
             path="/clientes/editar/:id"
             element={
@@ -51,7 +53,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          /* funcion para retornar la pagina de funeraria */
+          {/* Retornar la pagina de funeraria */}
           <Route
             path="/funeraria"
             element={
@@ -60,7 +62,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          /* funcion para retornar la pagina de cementerio */
+          {/* Retornar la pagina de cementerio */}
           <Route
             path="/cementerio"
             element={
@@ -69,7 +71,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          /* funcion para retornar la pagina de inicio */
+          {/* Retornar la pagina de inicio */}
           <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

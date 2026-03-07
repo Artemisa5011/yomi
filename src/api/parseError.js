@@ -1,4 +1,4 @@
-/*Convierte errores de Supabase en mensajes entendibles para el usuario.*/
+/*Conviertir errores de Supabase en mensajes claros.*/
 export function parseError(error, customMessages = {}) {
   const map = {
     PGRST116: 'Registro no encontrado',
