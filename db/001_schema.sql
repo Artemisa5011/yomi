@@ -1,11 +1,14 @@
--- YOMI NO HANA - BASE DE DATOS
+-- ============================================
+-- YOMI NO HANA - Esquema de base de datos
+-- ============================================
 -- Ejecutar en Supabase SQL Editor (en orden)
+
 -- Extensión para UUID
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-
+-- ============================================
 -- TABLA: empleados (vendedores)
-
+-- ============================================
 CREATE TABLE empleados (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -19,9 +22,9 @@ CREATE TABLE empleados (
 CREATE UNIQUE INDEX idx_empleados_cedula ON empleados(cedula);
 CREATE INDEX idx_empleados_user_id ON empleados(user_id);
 
-
+-- ============================================
 -- TABLA: clientes
-
+-- ============================================
 CREATE TABLE clientes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -41,9 +44,9 @@ CREATE UNIQUE INDEX idx_clientes_cedula_per_user ON clientes(user_id, cedula);
 
 -- Regla de negocio DB: No duplicar cédula por usuario (UNIQUE ya lo garantiza)
 
-
+-- ============================================
 -- TABLA: lotes (catálogo cementerio)
-
+-- ============================================
 CREATE TABLE lotes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   codigo VARCHAR(50) NOT NULL UNIQUE,
@@ -66,9 +69,9 @@ INSERT INTO lotes (codigo, nombre, capacidad_total, valor) VALUES
   ('IRA_35', 'IRA', 35, 800),
   ('ALMAS_INOCENTES_50', 'ALMAS INOCENTES', 50, 10000);
 
-
+-- ============================================
 -- TABLA: servicios_funerarios (Rituales, Ofrendas, Sombras)
-
+-- ============================================
 CREATE TABLE servicios_funerarios (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   cliente_id UUID NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
@@ -112,9 +115,9 @@ CREATE TRIGGER trg_max_servicios_por_dia
   FOR EACH ROW
   EXECUTE PROCEDURE fn_max_servicios_por_dia();
 
-
+-- ============================================
 -- TABLA: reservas_cementerio
-
+-- ============================================
 CREATE TABLE reservas_cementerio (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   cliente_id UUID NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,

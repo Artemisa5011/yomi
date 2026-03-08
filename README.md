@@ -18,10 +18,10 @@ La pagina es SPA - Single Page Applications Permite cambiar entre diferentes vis
    ```
 
 2. **Configurar variables de entorno**
-   - Copia `.env.example` a `.env`
+   - Copia `.env.example` a `.env` (o `.env.local`)
    - Crea un proyecto en [Supabase](https://supabase.com)
    - En Supabase: Settings → API → copia `Project URL` y `anon public` key
-   - En `.env`:
+   - En `.env` (sin comillas en los valores):
      ```
      VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
      VITE_SUPABASE_ANON_KEY=tu_anon_key
@@ -38,6 +38,7 @@ La pagina es SPA - Single Page Applications Permite cambiar entre diferentes vis
      - `006_valor_total.sql`
      - `007_roles_portal.sql` (roles 666/2/3, portal cliente, RLS extendida)
      - `008_test_sombra.sql` (resultado espiritual y bloqueo de lote)
+     - `009_fix_role_trigger.sql` (solo si ya ejecutaste 007 antes y al asignar admin sale "No puedes cambiar tu rol")
 
 4. **Configurar Auth en Supabase**
    - Authentication → Providers: Email habilitado
@@ -45,8 +46,8 @@ La pagina es SPA - Single Page Applications Permite cambiar entre diferentes vis
 
 5. **Crear el primer admin (rol 666)**
 
-   - En Supabase, crea un usuario (Authentication → Users) con el correo que usarás como admin, por ejemplo `contactoinfernal@yominohana.com`.
-   - Luego, en SQL Editor, ejecuta:
+   - En Supabase, crea un usuario (Authentication → Users) con el correo que usarás como admin y asigna una contraseña (ej. `contactoinfernal@yominohana.com`).
+   - En SQL Editor, ejecuta:
 
    ```sql
    INSERT INTO public.user_profiles (user_id, rol)
@@ -57,6 +58,8 @@ La pagina es SPA - Single Page Applications Permite cambiar entre diferentes vis
    ```
 
    - A partir de ahí, ese usuario verá el panel completo (admin + Dashboard) y podrá crear vendedores.
+
+   **Si sale "No puedes cambiar tu rol"** (porque ejecutaste `007_roles_portal.sql` antes de tener esta corrección): en SQL Editor ejecuta primero el archivo `db/009_fix_role_trigger.sql` y luego vuelve a ejecutar el `INSERT` de arriba.
 
 ## Scripts
 

@@ -1,10 +1,14 @@
--- Roles + Portal Cliente
+-- ============================================
+-- Roles + Portal Cliente (Opción recomendada)
 -- - Admin: rol 666
 -- - Vendedor: rol 2 (default)
 -- - Cliente portal: rol 3 (registro público)
+--
 -- Ejecutar después de:
 -- 001_schema.sql, 002_rls.sql, 003_realtime.sql, 004_reglas_negocio.sql
 -- (y después de 006_valor_total.sql si lo usas)
+-- ============================================
+
 -- 1) Tabla de perfiles/roles (no depende de app_metadata editable)
 CREATE TABLE IF NOT EXISTS public.user_profiles (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -39,7 +43,7 @@ AS $$
   SELECT public.get_user_role() = 666;
 $$;
 
--- 3) Proteger cambios de rol (solo admin puede cambiar roles)
+-- 3) Proteger cambios de rol (solo admin puede cambiar roles; SQL Editor sin JWT sí puede, para crear el primer admin)
 CREATE OR REPLACE FUNCTION public.trg_prevent_role_change()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -50,7 +54,8 @@ BEGIN
     RAISE EXCEPTION 'No se puede cambiar el user_id del perfil.';
   END IF;
 
-  IF NEW.rol <> OLD.rol AND NOT public.is_admin() THEN
+  -- Permitir cambio si no hay usuario de app (ej. SQL Editor / migración) o si quien hace el cambio es admin
+  IF NEW.rol <> OLD.rol AND auth.uid() IS NOT NULL AND NOT public.is_admin() THEN
     RAISE EXCEPTION 'No puedes cambiar tu rol.';
   END IF;
 

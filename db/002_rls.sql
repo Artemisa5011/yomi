@@ -1,7 +1,7 @@
-
+-- ============================================
 -- RLS - Row Level Security
 -- Todas las tablas aisladas por user_id
-
+-- ============================================
 
 ALTER TABLE empleados ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clientes ENABLE ROW LEVEL SECURITY;
