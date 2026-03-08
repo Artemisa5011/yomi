@@ -116,7 +116,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-        /* funcion para retornar el cliente no encontrado */
+        {/* Retornar el cliente no encontrado */}
         {clienteEncontrado === null && cedulaBuscar.trim() && (
           <div className="max-w-md mx-auto p-4 rounded-xl border border-amber-900/50 bg-amber-950/20 mb-6">
             <p className="text-amber-400">Cliente no existe. Regístralo primero:</p>
@@ -129,13 +129,13 @@ export default function Dashboard() {
           </div>
         )}
       </Seccion>
-      /* funcion para retornar la lista de clientes */
+      {/* Retornar la lista de clientes */}
       <Seccion title="📋 Lista de clientes">
         {loading ? (
           <p className="text-gray-400">Cargando...</p>
-        ) : clientes.length === 0 ? ( /* funcion para retornar el cliente no encontrado */
+        ) : clientes.length === 0 ? ( 
           <p className="text-gray-400">No hay clientes registrados.</p>
-        ) : ( /* funcion para retornar la lista de clientes */
+        ) : ( 
           <div className="overflow-x-auto max-h-80 overflow-y-auto">
             <table className="w-full text-left text-sm">
               <tbody>
