@@ -1,18 +1,20 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthProvider'
-import { ProtectedRoute } from './components/ProtectedRoute'
 import VideoBackground from './components/VideoBackground'
-
 /* importacion de las paginas */
 import Inicio from './pages/Inicio'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
+import RegistroCliente from './pages/RegistroCliente'
 import Dashboard from './pages/Dashboard'
 import ClienteNuevo from './pages/ClienteNuevo'
 import ClienteEditar from './pages/ClienteEditar'
 import Funeraria from './pages/Funeraria'
 import Cementerio from './pages/Cementerio'
+import MiCementerio from './pages/MiCementerio'
+import Admin from './pages/Admin'
+import { RoleRoute } from './components/RoleRoute'
 
 /* Retornar el layout de la aplicacion */
 export default function App() {
@@ -26,49 +28,73 @@ export default function App() {
           <Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/registro" element={<Registro />} />
+          <Route
+            path="/registro"
+            element={
+              <RoleRoute allow={[666]}>
+                <Registro />
+              </RoleRoute>
+            }
+          />
+          <Route path="/registro-cliente" element={<RegistroCliente />} />
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <RoleRoute allow={[2, 666]}>
                 <Dashboard />
-              </ProtectedRoute>
+              </RoleRoute>
             }
           />
           {/* Layout de la pagina de cliente nuevo */}
           <Route
             path="/clientes/nuevo"
             element={
-              <ProtectedRoute>
+              <RoleRoute allow={[2, 666]}>
                 <ClienteNuevo />
-              </ProtectedRoute>
+              </RoleRoute>
             }
           />
           {/* Layout de la pagina de cliente editar */}
           <Route
             path="/clientes/editar/:id"
             element={
-              <ProtectedRoute>
+              <RoleRoute allow={[2, 666]}>
                 <ClienteEditar />
-              </ProtectedRoute>
+              </RoleRoute>
             }
           />
           {/* Retornar la pagina de funeraria */}
           <Route
             path="/funeraria"
             element={
-              <ProtectedRoute>
+              <RoleRoute allow={[2, 666]}>
                 <Funeraria />
-              </ProtectedRoute>
+              </RoleRoute>
             }
           />
           {/* Retornar la pagina de cementerio */}
           <Route
             path="/cementerio"
             element={
-              <ProtectedRoute>
+              <RoleRoute allow={[2, 666]}>
                 <Cementerio />
-              </ProtectedRoute>
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/mi-cementerio"
+            element={
+              <RoleRoute allow={[3]}>
+                <MiCementerio />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RoleRoute allow={[666]}>
+                <Admin />
+              </RoleRoute>
             }
           />
           {/* Retornar la pagina de inicio */}
