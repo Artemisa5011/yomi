@@ -71,7 +71,7 @@ La pagina es SPA - Single Page Applications Permite cambiar entre diferentes vis
 
 1. **Registro y login (admin y vendedor)**
    - Como admin (correo al que diste rol 666), entra a `/login` e inicia sesión.
-   - Ve a `/registro` y crea un **vendedor**: cédula, nombre, teléfono, correo, contraseña.
+   - En el menú verás **ADMIN** (lleva a `/admin`, panel con enlaces a Registrar vendedor y Dashboard). Ve a **Registrar vendedor** (`/registro`) y crea un vendedor: cédula, nombre, teléfono, correo, contraseña.
    - Cierra sesión, inicia sesión con el vendedor y comprueba que ve Dashboard, Funeraria y Cementerio.
 
 2. **Ruta protegida**
@@ -171,3 +171,5 @@ La pagina es SPA - Single Page Applications Permite cambiar entre diferentes vis
 
 - `db/` – SQL: tablas, RLS, triggers, realtime
 - `src/` – React, páginas, contextos, componentes
+
+**Rutas y menú:** Todas las rutas del menú están conectadas en `App.jsx`. La protección se hace solo con `RoleRoute` (no se usa `ProtectedRoute`): `/` (Inicio), `/login`, `/registro` (solo admin), `/registro-cliente` (público), `/dashboard`, `/admin` (solo admin), `/funeraria`, `/cementerio`, `/mi-cementerio` (solo cliente portal), `/clientes/nuevo`, `/clientes/editar/:id`.
