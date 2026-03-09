@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthProvider'
 import VideoBackground from './components/VideoBackground'
+
 /* importacion de las paginas */
 import Inicio from './pages/Inicio'
 import Login from './pages/Login'
@@ -35,7 +36,7 @@ export default function App() {
                 <Registro />
               </RoleRoute>
             }
-          />
+          />{/* Retornar el layout de la pagina de registro de cliente */}
           <Route path="/registro-cliente" element={<RegistroCliente />} />
           <Route
             path="/dashboard"
