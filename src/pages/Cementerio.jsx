@@ -338,7 +338,7 @@ export default function Cementerio() {
       setLoading(false)
     }
   }
-  /* Layout del cementerio */
+  /* F. Layout del cementerio */
   return (
     <Layout title="CEMENTERIO">
       <Seccion title="♰ Cementerio - Lotes por pecado ♰">
@@ -353,7 +353,7 @@ export default function Cementerio() {
               onChange={(e) => setCedula(e.target.value)}
               className="flex-1 bg-[#1a1a1a] border border-red-900/50 rounded-lg px-4 py-2 text-white"
             />
-            /* funcion para buscar el cliente por cedula */
+            {/* F. Buscar el cliente por cedula */}
             <button type="button" onClick={() => buscarCliente(cedula)} className="rounded-full px-6 py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold">
               BUSCAR
             </button>
@@ -388,7 +388,7 @@ export default function Cementerio() {
             </button>
           </div>
         )}
-        {/* funcion para retornar el paso 2 del cementerio */}
+        {/* Retornar el paso 2 del cementerio */}
         {paso === 2 && (
           <div className="space-y-6">
             
@@ -398,7 +398,7 @@ export default function Cementerio() {
                 <p className="text-white/80">Código: {loteAsignado.codigo}</p>
                 <p className="text-white/80">Disponibles: {loteAsignado.capacidad_total - loteAsignado.capacidad_ocupada}</p>
                 <p className="text-red-400 font-bold">Valor: ${loteAsignado.valor}</p>
-                {/* funcion para cambiar el lote manualmente */}
+                {/* F. Cambiar el lote manualmente */}
                 <button
                   onClick={() => setCambioManual(true)}
                   className="mt-2 text-amber-400 hover:underline text-sm"
@@ -407,7 +407,7 @@ export default function Cementerio() {
                 </button>
               </div>
             )}
-            {/* funcion para retornar el cambio manual del lote */}
+            {/* F. Retornar el cambio manual del lote */}
             {cambioManual && (
               <div className="max-w-lg mx-auto">
                 <p className="text-amber-400 mb-2">Selecciona otro lote:</p>
@@ -438,7 +438,7 @@ export default function Cementerio() {
                   <span>Con difunto</span>
                 </label>
               </div>
-              /* funcion para retornar el nombre del difunto */
+              {/* F. Retornar el nombre del difunto */}
               {reservaTipo === 'reservado_con_difunto' && (
                 <input
                   type="text"
@@ -479,7 +479,7 @@ export default function Cementerio() {
                 ))}
               </div>
             </div>
-            {/* funcion para retornar el valor a pagar */}
+            {/* F. Retornar el valor a pagar */}
             <div className="max-w-md mx-auto">
               <p className="text-red-400 font-bold">Valor a pagar: $<span>{valorTotal()}</span></p>
               <p className="text-white/90 mb-2">Método de pago</p>
@@ -545,9 +545,9 @@ export default function Cementerio() {
     </Layout>
   )
 }
-/* funcion para retornar el costo de agregar un difunto */
+/* F. Retornar el costo de agregar un difunto */
 const COSTO_AGREGAR_DIFUNTO = 10
-/* funcion para retornar las reservas del cementerio */
+/* F. Retornar las reservas del cementerio */
 function ReservasCementerio() {
   const { reservas, loading } = useReservasCementerioRealtime()
 
@@ -557,7 +557,7 @@ function ReservasCementerio() {
       toast.error('Indica el nombre del difunto')
       return
     }
-    /* funcion para actualizar la reserva */
+    /* F. Actualizar la reserva */
     try {
       await reservasCementerioApi.updateReserva(r.id, {
         estado: 'ocupado',
@@ -565,16 +565,16 @@ function ReservasCementerio() {
         valor_adicional: (r.valor_adicional || 0) + COSTO_AGREGAR_DIFUNTO
       })
       toast.success(`Pasado a ocupado. Cargo adicional: $${COSTO_AGREGAR_DIFUNTO}`)
-      /* funcion para mostrar el mensaje de éxito */
+      /* F. Mostrar el mensaje de éxito */
     } catch (err) {
       toast.error(err.message)
     }
   }
-  /* funcion para retornar las reservas sin difunto */
+  /* F. Retornar las reservas sin difunto */
   const sinDifunto = reservas.filter((r) => r.estado === 'reservado_sin_difunto')
   return (
     <>
-      {/* funcion para retornar las reservas sin difunto */}
+      {/* F. Retornar las reservas sin difunto */}
       {sinDifunto.length > 0 && (
         <Seccion title="📋 Reservas sin difunto - Pasar a ocupado (+$10)">
           {sinDifunto.map((r) => (
@@ -599,7 +599,7 @@ function ReservasCementerio() {
                 </tr>
               </thead>
               <tbody>
-                {/* funcion para retornar las reservas */}
+                {/* F. Retornar las reservas */}
                 {reservas.map((r) => (
                   <tr key={r.id} className="border-b border-red-900/30">
                     <td className="p-2">{r.lotes?.nombre || '-'}</td>
@@ -616,9 +616,9 @@ function ReservasCementerio() {
     </>
   )
 }
-/* funcion para retornar el layout de las reservas sin difunto */
+/* F. Retornar el layout de las reservas sin difunto */
 function PasarAOcupadoRow({ reserva, onConfirm }) {
-  /* funcion para retornar el nombre del difunto */
+  /* F. Retornar el nombre del difunto */
   const [nombre, setNombre] = useState('')
   return (
     <div className="flex flex-wrap items-center gap-2 p-3 rounded border border-amber-900/50 bg-amber-950/20 mb-2">
