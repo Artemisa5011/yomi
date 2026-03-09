@@ -4,18 +4,19 @@ import Layout from '../components/Layout'
 import Seccion from '../components/Seccion'
 import * as clientesApi from '../api/clientesApi'
 import toast from 'react-hot-toast'
-/* funcion para retornar el layout de la pagina de dashboard */
+/* Rtornar el layout de la pagina de dashboard */
 export default function Dashboard() {
   const [clientes, setClientes] = useState([])
-  const [loading, setLoading] = useState(true) /* funcion para retornar el estado de carga */
+  const [loading, setLoading] = useState(true) /* Retornar el estado de carga */
   const [cedulaBuscar, setCedulaBuscar] = useState('')
   const [clienteEncontrado, setClienteEncontrado] = useState(null) /* funcion para retornar el cliente encontrado */
   const [deletingId, setDeletingId] = useState(null) /* funcion para retornar el id de eliminacion */
+
   /* funcion para cargar los clientes */
   useEffect(() => {
     cargarClientes()
   }, [])
-  /* funcion para cargar los clientes */
+  
   const cargarClientes = async () => {
     try {
       const data = await clientesApi.listClientes()
@@ -26,7 +27,8 @@ export default function Dashboard() {
       setLoading(false)
     }
   }
-  /* funcion para buscar el cliente */
+
+  /* F. Buscar el cliente */
   const buscarCliente = async (e) => {
     e?.preventDefault()
     if (!cedulaBuscar.trim()) return
@@ -43,7 +45,7 @@ export default function Dashboard() {
       toast.error(err.message)
     }
   }
-  /* funcion para eliminar el cliente */
+  /* F. Eliminar el cliente */
   const handleDeleteCliente = async (id, nombre) => {
     if (!window.confirm(`¿Eliminar cliente "${nombre}"? No se puede deshacer.`)) return
     setDeletingId(id)
@@ -62,7 +64,7 @@ export default function Dashboard() {
       setDeletingId(null)
     }
   }
-  /* funcion para retornar el layout de la pagina de dashboard */
+  /* F. Retornar el layout de la pagina de dashboard */
   return (
     <Layout title="DASHBOARD">
       <Seccion title="♰ Panel del Vendedor ♰">
@@ -75,7 +77,7 @@ export default function Dashboard() {
             VENDER CEMENTERIO
           </Link>
         </div>
-        /* funcion para buscar el cliente */
+        {/* F. Buscar el cliente */}
         <form onSubmit={buscarCliente} className="flex flex-wrap gap-2 justify-center max-w-md mx-auto mb-6">
           <input
             type="text"
@@ -88,7 +90,7 @@ export default function Dashboard() {
             BUSCAR
           </button>
         </form>
-        /* funcion para retornar el cliente encontrado */
+        {/* F. Retornar el cliente encontrado */}
         {clienteEncontrado && (
           <div className="max-w-md mx-auto p-4 rounded-xl border border-red-900/50 bg-black/60 mb-6">
             <p className="text-red-400 font-bold">{clienteEncontrado.nombre_completo}</p>

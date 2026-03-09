@@ -44,7 +44,8 @@ export default function Funeraria() {
       buscarCliente(cedulaParam)
     }
   }, [cedulaParam])
-  /* funcion para buscar cliente por cedula */
+
+  /* F. Buscar cliente por cedula */
   const buscarCliente = async (ced) => {
     if (!ced?.trim()) return
     try {
@@ -65,9 +66,10 @@ export default function Funeraria() {
     }
   }
 
-  /* funcion para calcular el total del carrito */
+  /* F. Calcular el total del carrito */
   const totalCarrito = carrito.reduce((s, i) => s + i.valor * i.cantidad, 0)
-  /* funcion para agregar servicios al carrito */
+
+  /* F. Agregar servicios al carrito */
   const agregar = (s, cantidad = 1) => {
     const fechaUsar = fecha || new Date().toISOString().slice(0, 10)
     const yaEnDia = carrito.filter((c) => c.fecha === fechaUsar).reduce((a, c) => a + c.cantidad, 0)
@@ -86,12 +88,12 @@ export default function Funeraria() {
     }
   }
 
-  /* funcion para quitar servicios del carrito */
+  /* F. Quitar servicios del carrito */
   const quitar = (idx) => {
     setCarrito(carrito.filter((_, i) => i !== idx))
   }
 
-  /* funcion para confirmar el pago de los servicios */
+  /* F. Confirmar el pago de los servicios */
   const confirmarPago = async () => {
     if (!cliente || carrito.length === 0 || !nombreDifunto?.trim()) {
       toast.error('Selecciona servicios, fecha, hora y nombre del difunto')
@@ -125,7 +127,7 @@ export default function Funeraria() {
       toast.error('La fecha no puede ser en el pasado')
       return
     }
-    /* funcion para confirmar el pago de los servicios */
+    /* F. Confirmar el pago de los servicios */
     setLoading(true)
     try {
       if (metodoPago === 'tarjeta') {
@@ -133,7 +135,7 @@ export default function Funeraria() {
         await new Promise((r) => setTimeout(r, 1500))
         toast.dismiss('tarjeta')
       }
-      /* funcion para crear los servicios funerarios */
+      /* F. Crear los servicios funerarios */
       const rows = carrito.map((item) => ({
         cliente_id: cliente.id,
         user_id: user.id,
@@ -146,8 +148,7 @@ export default function Funeraria() {
         nombre_condenado: metodoPago === 'con_la_vida' ? nombreCondenado.trim() : null,
         valor: item.valor * item.cantidad,
         valor_total: totalCarrito
-      }))
-      /* funcion para crear los servicios funerarios */
+      }))      
       await serviciosFunerariosApi.createServiciosFunerarios(rows)    
       await clientesApi.updateCliente(cliente.id, { estado: 'verdugo' })      
       toast.success(`⸸ Pago recibido. Total: $${totalCarrito}. Alma condenada con éxito. Servicio programado. ⸸`)
@@ -166,38 +167,38 @@ export default function Funeraria() {
     }
   }
 
-  /* funcion para manejar el pacto */
+  /* F. Manejar el pacto */
   const handlePactar = () => {
     if (!cliente) {
       toast.error('Busca y valida el cliente primero')
       return
     }
-    /* funcion para verificar si se ha agregado al menos un servicio */
+    /* F. Verificar si se ha agregado al menos un servicio */
     if (carrito.length === 0) {
       toast.error('Agrega al menos un servicio')
       return
     }
-    /* funcion para verificar si se ha seleccionado fecha y hora */
+    /* F. Verificar si se ha seleccionado fecha y hora */
     if (!fecha || !hora) {
       toast.error('Selecciona fecha y hora')
       return
     }
-    /* funcion para verificar si se ha indicado el nombre del maldecido/difunto */
+    /* F. Verificar si se ha indicado el nombre del maldecido/difunto */
     if (!nombreDifunto?.trim()) {
       toast.error('Indica el nombre del maldecido/difunto')
       return
     }
-    /* funcion para verificar si la fecha no es en el pasado */
+    /* F. Verificar si la fecha no es en el pasado */
     const hoy = new Date().toISOString().slice(0, 10)
     if (fecha < hoy) {
       toast.error('La fecha no puede ser en el pasado')
       return
     }
-    /* funcion para mostrar el formulario de pago */
+    /* F. Mostrar el formulario de pago */
     setMostrarFormPago(true)
   }
 
-  /* funcion para retornar el layout de la funeraria */
+  /* F. Retornar el layout de la funeraria */
   return (  
     <Layout title="FUNERARIA">
         <Seccion title="♰ Servicios fúnebres ♰">        
@@ -205,9 +206,9 @@ export default function Funeraria() {
           Rituales, ofrendas y sombras. Máximo 3 servicios por cliente por día. Selecciona hora: 00:00 ó 03:00.
         </p>
 
-        /* funcion para retornar el div de la funeraria */
+        {/* F. Retornar el div de la funeraria */}
         <div className="max-w-md mx-auto mb-6"> 
-          /* funcion para retornar el input de la funeraria */
+          {/* F. Retornar el input de la funeraria */}
           <div className="flex gap-2">
             <input
               type="text"
@@ -358,7 +359,7 @@ export default function Funeraria() {
     </Layout>
   )
 }
-/* funcion para retornar el calendario de la funeraria */
+/* F. Retornar el calendario de la funeraria */
 function CalendarioFuneraria() {
   const { servicios, loading } = useServiciosFunerariosRealtime()
 

@@ -14,7 +14,7 @@ export default function ClienteEditar() {
   const [saving, setSaving] = useState(false) /* Estado de guardado */
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
-/* funcion para cargar el cliente por id */
+/* F. Cargar el cliente por id */
   useEffect(() => {
     const cargar = async () => {
       try {
@@ -34,6 +34,7 @@ export default function ClienteEditar() {
     }
     cargar()
   }, [id, navigate])
+
   /* Manejar el submit del formulario */
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -56,11 +57,11 @@ export default function ClienteEditar() {
       setSaving(false)
     }
   }
-  /* funcion para retornar el layout de la pagina de cliente editar */
+  /* F. Retornar el layout de la pagina de cliente editar */
   if (loading) return (
     <Layout><div className="text-center py-12 text-gray-400">Cargando...</div></Layout>
   )
-  /* funcion para retornar el layout de la pagina de cliente editar */
+ 
   return (
     <Layout title="Editar cliente">
       <Seccion title="♰ Actualizar contacto (teléfono, correo, departamento, ciudad) ♰">

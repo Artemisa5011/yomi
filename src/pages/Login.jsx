@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/useAuth'
 import toast from 'react-hot-toast'
-/* funcion para retornar el layout de la pagina de login */
+/* F. Retornar el layout de la pagina de login */
 export default function Login() {
-  const [email, setEmail] = useState('') /* funcion para retornar el email */
-  const [password, setPassword] = useState('') /* funcion para retornar la contraseña */
-  const [loading, setLoading] = useState(false) /* funcion para retornar el estado de carga */
-  const { signIn } = useAuth() /* funcion para retornar el signIn */
+  const [email, setEmail] = useState('') /* F. Retornar el email */
+  const [password, setPassword] = useState('') /* F. Retornar la contraseña */
+  const [loading, setLoading] = useState(false) /* F. Retornar el estado de carga */
+  const { signIn } = useAuth() /* F. Retornar el signIn */
   const navigate = useNavigate()
-  /* funcion para manejar el submit del formulario */
+  /* F. Manejar el submit del formulario */
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email || !password) {
@@ -27,7 +27,7 @@ export default function Login() {
       setLoading(false)
     }
   }
-  /* funcion para retornar el layout de la pagina de login */
+  /* F. Layout de la pagina de login */
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md mx-4 p-8 rounded-3xl border-4 border-red-900/60 bg-black/80 shadow-[0_-5px_25px_rgba(255,0,0,0.3)]">

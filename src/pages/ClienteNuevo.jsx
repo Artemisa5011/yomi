@@ -5,7 +5,7 @@ import Seccion from '../components/Seccion'
 import * as clientesApi from '../api/clientesApi'
 import { useAuth } from '../contexts/useAuth'
 import toast from 'react-hot-toast'
-/* funcion para retornar el layout de la pagina de cliente nuevo */
+/* F. Retornar el layout de la pagina de cliente nuevo */
 export default function ClienteNuevo() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
@@ -19,21 +19,21 @@ export default function ClienteNuevo() {
     departamento: '',
     ciudad: ''
   })
-  const [loading, setLoading] = useState(false) /* funcion para retornar el estado de carga */
-  /* funcion para cargar el cliente */
+  const [loading, setLoading] = useState(false) /* F. Retornar el estado de carga */
+  /* F. Cargar el cliente */
   useEffect(() => {
     if (cedulaParam) setForm((f) => ({ ...f, cedula: cedulaParam }))
   }, [cedulaParam])
-  /* funcion para manejar el cambio de formulario */
+  /* F. Manejar el cambio de formulario */
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
-  /* funcion para manejar el submit del formulario */
+  /* F. Manejar el submit del formulario */
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.cedula?.trim() || !form.nombre_completo?.trim()) {
       toast.error('Cédula y nombre son obligatorios')
       return
     }
-    setLoading(true) /* funcion para cargar el cliente */
+    setLoading(true) /* F. Cargar el cliente */
     try {
       await clientesApi.createCliente({
         user_id: user.id,
@@ -54,7 +54,7 @@ export default function ClienteNuevo() {
       setLoading(false)
     }
   }
-  /* funcion para retornar el layout de la pagina de cliente nuevo */
+  /* F. Layout de la pagina de cliente nuevo */
   return (
     <Layout title="Registrar cliente">
       <Seccion title="♰ Nuevo cliente ♰">

@@ -18,7 +18,7 @@ export default function Inicio() {
     /* Mostrar mensaje de éxito */
     toast.success('⸸ Mensaje enviado a las sombras... Te contactaremos pronto ⸸')
     setForm({ nombre: '', correo: '', mensaje: '' })
-    /* funcion para resetear el formulario de contacto */
+    /* F. Resetear el formulario de contacto */
   }
   /* Retornar el layout de la pagina de inicio */
   return (
