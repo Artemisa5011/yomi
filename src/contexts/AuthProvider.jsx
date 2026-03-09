@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { AuthContext } from './authContext'
 import { supabase } from '../lib/supabase'
+
 /* Retornar el provider de autenticacion iniciar/cerrar */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [rol, setRol] = useState(null)
+
   /* Cargar el usuario */
   useEffect(() => {
     const cargarPerfil = async (u) => {
@@ -39,12 +41,14 @@ export function AuthProvider({ children }) {
     })
     return () => subscription?.unsubscribe()
   }, [])
+
   /* Iniciar sesion */
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     return data
   }
+
   /* Registrar un usuario */
   const signUp = async (email, password, metadata = {}) => {
     const { data, error } = await supabase.auth.signUp({
@@ -55,10 +59,12 @@ export function AuthProvider({ children }) {
     if (error) throw error
     return data
   }
+
   /* Cerrar sesion */
   const signOut = async () => {
     await supabase.auth.signOut()
   }
+
   /* Retornar el valor del contexto */
   const value = {
     user,
@@ -72,6 +78,7 @@ export function AuthProvider({ children }) {
     signOut,
     isAuthenticated: !!user
   }
+  
   /* Retornar el contexto de autenticacion */
   return (
     <AuthContext.Provider value={value}>
