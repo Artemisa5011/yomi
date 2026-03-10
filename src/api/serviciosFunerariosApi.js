@@ -11,6 +11,30 @@ export async function listServiciosConfirmados() {
   if (error) throw parseError(error)
   return data || []
 }
+
+/* Listar servicios por cliente_id (admin/vendedor) */
+export async function listServiciosByClienteId(clienteId) {
+  if (!clienteId) return []
+  const { data, error } = await supabase
+    .from('servicios_funerarios')
+    .select('*')
+    .eq('cliente_id', clienteId)
+    .eq('estado_pago', 'confirmado')
+    .order('fecha', { ascending: false })
+  if (error) throw parseError(error)
+  return data || []
+}
+
+/* Listar servicios del portal cliente (rol 3) - RLS filtra por cliente_user_id */
+export async function listMisServicios() {
+  const { data, error } = await supabase
+    .from('servicios_funerarios')
+    .select('*')
+    .eq('estado_pago', 'confirmado')
+    .order('fecha', { ascending: false })
+  if (error) throw parseError(error)
+  return data || []
+}
 /* Crear los servicios */
 export async function createServiciosFunerarios(rows) {
   for (const row of rows) {

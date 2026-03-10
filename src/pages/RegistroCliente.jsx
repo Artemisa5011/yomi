@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/useAuth'
+import { supabase } from '../lib/supabase'
 import Logo from '../components/Logo'
 import toast from 'react-hot-toast'
 
@@ -11,23 +12,41 @@ export default function RegistroCliente() {
     correo: '', 
     password: '' 
   })
-  const [loading, setLoading] = useState(false) /* estado para cargar el formulario */
-  const { signUp } = useAuth() /* Registrar el cliente */
-  const navigate = useNavigate() /* Navegar a la pagina de login */
+  const [loading, setLoading] = useState(false)
+  const { signUp } = useAuth()
+  const navigate = useNavigate()
 
-/* Manejar el cambio del formulario */
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+
+  /* Validar contraseña según política de Supabase (mayúscula, minúscula, número, símbolo) */
+  const validarPassword = (pwd) => {
+    if (!pwd || pwd.length < 6) return { ok: false, msg: 'Mínimo 6 caracteres' }
+    if (!/[a-z]/.test(pwd)) return { ok: false, msg: 'Al menos una letra minúscula' }
+    if (!/[A-Z]/.test(pwd)) return { ok: false, msg: 'Al menos una letra mayúscula' }
+    if (!/[0-9]/.test(pwd)) return { ok: false, msg: 'Al menos un número' }
+    if (!/[!@#$%^&*()_+\-=[\]{};':"|,.<>/?~`]/.test(pwd)) return { ok: false, msg: 'Al menos un símbolo (!@#$%...)' }
+    return { ok: true }
+  }
   
-/* Manejar el submit del formulario */
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.cedula || !form.correo || !form.password) {
       toast.error('Completa cédula, correo y contraseña')
       return
     }
+    const pwdCheck = validarPassword(form.password)
+    if (!pwdCheck.ok) {
+      toast.error(`La contraseña debe tener: ${pwdCheck.msg}`)
+      return
+    }
     setLoading(true)
     try {
-      // La migración db/007_roles_portal.sql crea rol=3 cuando registro_tipo='cliente'
+      const { data: yaExiste } = await supabase.rpc('cedula_ya_registrada', { p_cedula: form.cedula.trim() })
+      if (yaExiste) {
+        toast.error('Esta cédula ya está registrada. Si ya tienes cuenta, inicia sesión.')
+        setLoading(false)
+        return
+      }
       await signUp(form.correo, form.password, {
         registro_tipo: 'cliente',
         cedula: form.cedula.trim()
@@ -35,7 +54,12 @@ export default function RegistroCliente() {
       toast.success('Registro completado. Inicia sesión')
       navigate('/login')
     } catch (err) {
-      toast.error(err.message || 'Error al registrarse')
+      const msg = err?.message || ''
+      if (msg.includes('already registered') || msg.includes('already exists')) {
+        toast.error('Este correo ya tiene cuenta. Inicia sesión o recupera tu contraseña.')
+      } else {
+        toast.error(msg || 'Error al registrarse')
+      }
     } finally {
       setLoading(false)
     }
@@ -67,16 +91,21 @@ export default function RegistroCliente() {
             className="bg-[#1a1a1a] border border-red-900/50 rounded-lg px-4 py-3 text-white"
             required
           />
-          <input
-            name="password"
-            type="password"
-            placeholder="Contraseña (mín. 6)"
-            value={form.password}
-            onChange={handleChange}
-            className="bg-[#1a1a1a] border border-red-900/50 rounded-lg px-4 py-3 text-white"
-            required
-            minLength={6}
-          />
+          <div>
+            <input
+              name="password"
+              type="password"
+              placeholder="Contraseña"
+              value={form.password}
+              onChange={handleChange}
+              className="bg-[#1a1a1a] border border-red-900/50 rounded-lg px-4 py-3 text-white w-full"
+              required
+              minLength={6}
+            />
+            <p className="text-gray-500 text-xs mt-1">
+              Mín. 6 caracteres: mayúscula, minúscula, número y símbolo (!@#$...)
+            </p>
+          </div>
           <button
             type="submit"
             disabled={loading}

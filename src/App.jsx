@@ -11,6 +11,7 @@ import RegistroCliente from './pages/RegistroCliente'
 import Dashboard from './pages/Dashboard'
 import ClienteNuevo from './pages/ClienteNuevo'
 import ClienteEditar from './pages/ClienteEditar'
+import ClienteDetalle from './pages/ClienteDetalle'
 import Funeraria from './pages/Funeraria'
 import Cementerio from './pages/Cementerio'
 import MiCementerio from './pages/MiCementerio'
@@ -61,6 +62,15 @@ export default function App() {
             element={
               <RoleRoute allow={[2, 666]}>
                 <ClienteEditar />
+              </RoleRoute>
+            }
+          />
+          {/* Layout de la pagina de detalle del cliente */}
+          <Route
+            path="/clientes/detalle/:id"
+            element={
+              <RoleRoute allow={[2, 666]}>
+                <ClienteDetalle />
               </RoleRoute>
             }
           />

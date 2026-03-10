@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Seccion from '../components/Seccion'
 import * as clientesApi from '../api/clientesApi'
@@ -64,6 +64,11 @@ export default function ClienteEditar() {
  
   return (
     <Layout title="Editar cliente">
+      <div className="mb-4">
+        <Link to={`/clientes/detalle/${id}`} className="text-red-400 hover:underline">
+          ← Ver detalle del cliente
+        </Link>
+      </div>
       <Seccion title="♰ Actualizar contacto (teléfono, correo, departamento, ciudad) ♰">
         <form onSubmit={handleSubmit} className="max-w-md mx-auto flex flex-col gap-4 text-left">
           <div>

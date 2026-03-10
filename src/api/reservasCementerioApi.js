@@ -1,6 +1,17 @@
 import { supabase } from '../lib/supabase' /* Conectar la base de datos */
 import { parseError } from './parseError' /* Manejo de Errores */
 
+/* Obtener una reserva por id con lote (para Realtime) */
+export async function getReservaWithLote(id) {
+  if (!id) return null
+  const { data, error } = await supabase
+    .from('reservas_cementerio')
+    .select('*, lotes(nombre, codigo)')
+    .eq('id', id)
+    .single()
+  if (error) return null
+  return data
+}
 /* Listar las reservas confirmadas */
 export async function listReservasConfirmadas() {
   const { data, error } = await supabase
@@ -10,6 +21,19 @@ export async function listReservasConfirmadas() {
   if (error) throw parseError(error)
   return data || []
 }
+/* Listar reservas por cliente_id (admin/vendedor) */
+export async function listReservasByClienteId(clienteId) {
+  if (!clienteId) return []
+  const { data, error } = await supabase
+    .from('reservas_cementerio')
+    .select('*, lotes(nombre, codigo)')
+    .eq('cliente_id', clienteId)
+    .eq('estado_pago', 'confirmado')
+    .order('created_at', { ascending: false })
+  if (error) throw parseError(error)
+  return data || []
+}
+
 /* listar reservas del usuario */
 export async function listMisReservas() {
   const { data, error } = await supabase
@@ -20,11 +44,16 @@ export async function listMisReservas() {
   if (error) throw parseError(error)
   return data || []
 }
-/* Obtener el id del usuario del portal por cedula */
+/* Obtener el id del usuario del portal por cedula (opcional, retorna null si falla) */
 export async function getPortalUserIdByCedula(cedula) {
-  const { data, error } = await supabase.rpc('get_portal_user_id_by_cedula', { p_cedula: cedula })
-  if (error) throw parseError(error)
-  return data || null
+  if (!cedula?.trim()) return null
+  try {
+    const { data, error } = await supabase.rpc('get_portal_user_id_by_cedula', { p_cedula: cedula })
+    if (error) return null
+    return data || null
+  } catch {
+    return null
+  }
 }
 /* Crear una reserva */
 export async function createReserva(payload) {

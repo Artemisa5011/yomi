@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import Seccion from '../components/Seccion'
 import * as clientesApi from '../api/clientesApi'
 import * as serviciosFunerariosApi from '../api/serviciosFunerariosApi'
+import * as reservasCementerioApi from '../api/reservasCementerioApi'
 import { useServiciosFunerariosRealtime } from '../hooks/useServiciosFunerariosRealtime'
 import { useAuth } from '../contexts/useAuth'
 import toast from 'react-hot-toast'
@@ -135,10 +136,13 @@ export default function Funeraria() {
         await new Promise((r) => setTimeout(r, 1500))
         toast.dismiss('tarjeta')
       }
+      /* Vincular al cliente portal si existe usuario con esa cédula */
+      const portalUserId = await reservasCementerioApi.getPortalUserIdByCedula(cliente.cedula)
       /* F. Crear los servicios funerarios */
       const rows = carrito.map((item) => ({
         cliente_id: cliente.id,
         user_id: user.id,
+        cliente_user_id: portalUserId || undefined,
         tipo: item.tipo,
         nombre_difunto: nombreDifunto.trim(),
         hora: item.hora || '00:00',
@@ -148,7 +152,7 @@ export default function Funeraria() {
         nombre_condenado: metodoPago === 'con_la_vida' ? nombreCondenado.trim() : null,
         valor: item.valor * item.cantidad,
         valor_total: totalCarrito
-      }))      
+      }))
       await serviciosFunerariosApi.createServiciosFunerarios(rows)    
       await clientesApi.updateCliente(cliente.id, { estado: 'verdugo' })      
       toast.success(`⸸ Pago recibido. Total: $${totalCarrito}. Alma condenada con éxito. Servicio programado. ⸸`)

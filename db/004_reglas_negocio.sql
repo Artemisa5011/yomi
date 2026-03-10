@@ -1,7 +1,5 @@
--- ============================================
--- Reglas de negocio adicionales (DB)
+-- Reglas de negocio (DB)
 -- Ejecutar en Supabase SQL Editor
--- ============================================
 
 -- 1. Fecha no en el pasado (servicios funerarios)
 ALTER TABLE servicios_funerarios

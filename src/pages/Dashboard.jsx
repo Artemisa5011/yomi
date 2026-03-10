@@ -97,6 +97,12 @@ export default function Dashboard() {
             <p className="text-white/80">Cédula: {clienteEncontrado.cedula}</p>
             <p className="text-white/80">Estado: {clienteEncontrado.estado}</p>
             <Link
+              to={`/clientes/detalle/${clienteEncontrado.id}`}
+              className="inline-block mt-2 text-red-400 hover:underline mr-2"
+            >
+              Ver detalle
+            </Link>
+            <Link
               to={`/clientes/editar/${clienteEncontrado.id}`}
               className="inline-block mt-2 text-red-400 hover:underline"
             >
@@ -147,6 +153,7 @@ export default function Dashboard() {
                     <td className="p-2">{c.nombre_completo}</td>
                     <td className="p-2">{c.estado}</td>
                     <td className="p-2">
+                      <Link to={`/clientes/detalle/${c.id}`} className="text-red-400 hover:underline mr-2">Ver detalle</Link>
                       <Link to={`/clientes/editar/${c.id}`} className="text-red-400 hover:underline mr-2">Editar</Link>
                       <button
                         type="button"

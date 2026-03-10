@@ -166,6 +166,7 @@ export default function Cementerio() {
   const [cliente, setCliente] = useState(null)
   const [cedula, setCedula] = useState(cedulaParam)
   const [lotes, setLotes] = useState([])
+  const [lotesLoading, setLotesLoading] = useState(true)
   const [loteAsignado, setLoteAsignado] = useState(null)
   const [loteSeleccionado, setLoteSeleccionado] = useState(null)
   const [cambioManual, setCambioManual] = useState(false)
@@ -178,11 +179,11 @@ export default function Cementerio() {
   const [tarjetaCVV, setTarjetaCVV] = useState('')
   const [loading, setLoading] = useState(false)
   const [respuestasSombra, setRespuestasSombra] = useState({})
+  const [reservarAlmasInocentes, setReservarAlmasInocentes] = useState(false)
 
-  /* Retornar las preguntas del cementerio */
+  /* Retornar las preguntas del cementerio (sin Inocente: Almas Inocentes solo en pago) */
   const preguntas = [
-    { id: 'pecado', texto: '¿Qué pecado representa mejor el alma?', opciones: ['Lujuria', 'Gula', 'Avaricia', 'Pereza', 'Ira', 'Envidia', 'Soberbia', 'Inocente'] },
-    { id: 'presupuesto', texto: 'Rango de presupuesto', opciones: ['Bajo (hasta 500)', 'Medio (500-1000)', 'Alto (1000+)'] }
+    { id: 'pecado', texto: '¿Qué pecado representa mejor el alma?', opciones: ['Lujuria', 'Gula', 'Avaricia', 'Pereza', 'Ira', 'Envidia', 'Soberbia'] }
   ]
   /* Cargar los lotes del cementerio */
   useEffect(() => {
@@ -197,8 +198,13 @@ export default function Cementerio() {
   }, [cedulaParam])
   /* Cargar los lotes del cementerio */
   const cargarLotes = async () => {
-    const data = await lotesApi.listLotes()
-    setLotes(data)
+    setLotesLoading(true)
+    try {
+      const data = await lotesApi.listLotes()
+      setLotes(data)
+    } finally {
+      setLotesLoading(false)
+    }
   }
   /* Buscar el cliente por cedula */
   const buscarCliente = async (ced) => {
@@ -216,29 +222,63 @@ export default function Cementerio() {
       toast.error(err.message)
     }
   }
-  /* Asignar lote al cliente */
+  /* Asignar lote al cliente - retorna el lote o null si no hay disponibles */
   const asignarLote = () => {
+    if (lotes.length === 0) return null
     const pecado = respuestas.pecado?.toLowerCase() || 'ira'
     const mapaPecado = {
       lujuria: 'LUJURIA', gula: 'GULA', avaricia: 'AVARICIA', pereza: 'PEREZA',
-      ira: 'IRA', envidia: 'ENVIDIA', soberbia: 'SOBERBIA', inocente: 'ALMAS INOCENTES'
+      ira: 'IRA', envidia: 'ENVIDIA', soberbia: 'SOBERBIA'
     }
     const nombreBuscado = mapaPecado[pecado] || 'IRA'
     const disponibles = lotes.filter((l) => l.nombre === nombreBuscado && l.capacidad_ocupada < l.capacidad_total)
     if (disponibles.length === 0) {
       const cualquiera = lotes.find((l) => l.capacidad_ocupada < l.capacidad_total)
-      setLoteAsignado(cualquiera || null)
-    } else {
-      setLoteAsignado(disponibles[0])
+      return cualquiera || null
     }
+    return disponibles[0]
   }
-  /* Valor total de la reserva */
+  /* Avanzar a paso 2 solo si se asignó un lote y hay cliente */
+  const handleAsignarLote = () => {
+    if (!cliente) {
+      toast.error('Busca y valida el cliente primero (BUSCAR)')
+      return
+    }
+    if (lotesLoading) {
+      toast.error('Espera a que carguen los lotes')
+      return
+    }
+    const lote = asignarLote()
+    if (!lote) {
+      toast.error('No hay lotes disponibles. Todos están llenos.')
+      return
+    }
+    setLoteAsignado(lote)
+    setPaso(2)
+  }
+  /* Lote efectivo (Almas Inocentes si eligió en pago, sino el asignado/seleccionado) */
+  const loteEfectivo = () => {
+    if (reservarAlmasInocentes) {
+      const almas = lotes.find((l) => l.nombre === 'ALMAS INOCENTES' && l.capacidad_ocupada < l.capacidad_total)
+      return almas || null
+    }
+    return loteSeleccionado || loteAsignado
+  }
+  /* Valor total: lote efectivo + (si Almas Inocentes: valor lote asignado anterior + excedente) + cambio manual */
   const valorTotal = () => {
-    if (!loteSeleccionado && !loteAsignado) return 0
-    const lote = loteSeleccionado || loteAsignado
-    let v = Number(lote.valor)
-    if (cambioManual) v += COSTO_CAMBIO_MANUAL
-    return v
+    const lote = loteEfectivo()
+    if (!lote) return 0
+    let valorLote = Number(lote.valor) || 0
+    let valorExcedente = 0
+    /* Almas Inocentes: suma valor del lote asignado anterior + $1.000.000 excedente */
+    if (reservarAlmasInocentes && !loteSeleccionado) {
+      const valorLoteAnterior = Number(loteAsignado?.valor) || 0
+      valorExcedente += valorLoteAnterior
+      valorExcedente += COSTO_CAMBIO_MANUAL
+    }
+    /* +$1.000.000 por cambiar manualmente a otro lote */
+    if (cambioManual) valorExcedente += COSTO_CAMBIO_MANUAL
+    return valorLote + valorExcedente
   }
   /* Confirmar Reserva */
   const confirmarReserva = async () => {
@@ -246,9 +286,17 @@ export default function Cementerio() {
       toast.error('Busca y valida el cliente primero')
       return
     }
-    const lote = loteSeleccionado || loteAsignado
+    const lote = loteEfectivo()
     if (!lote) {
-      toast.error('Asigna o selecciona un lote')
+      toast.error('Asigna un lote' + (reservarAlmasInocentes ? ' o verifica capacidad en Almas Inocentes' : ''))
+      return
+    }
+    if (reservarAlmasInocentes && !lotes.find((l) => l.nombre === 'ALMAS INOCENTES' && l.capacidad_ocupada < l.capacidad_total)) {
+      toast.error('No hay capacidad en Almas Inocentes')
+      return
+    }
+    if (cambioManual && reservarAlmasInocentes && !loteSeleccionado) {
+      toast.error('Selecciona un lote de la lista al cambiar manualmente')
       return
     }
     if (!reservaTipo) {
@@ -308,7 +356,7 @@ export default function Cementerio() {
         metodo_pago: metodoPago,
         nombre_condenado: metodoPago === 'con_la_vida' ? nombreCondenado.trim() : null,
         valor_base: lote.valor,
-        valor_adicional: cambioManual ? COSTO_CAMBIO_MANUAL : 0,
+        valor_adicional: (reservarAlmasInocentes && !loteSeleccionado ? (Number(loteAsignado?.valor) || 0) + COSTO_CAMBIO_MANUAL : 0) + (cambioManual ? COSTO_CAMBIO_MANUAL : 0),
         valor_total: valorTotal(),
         estado_pago: 'confirmado',
         sombra_pecado: resultadoSombra.pecado,
@@ -330,6 +378,7 @@ export default function Cementerio() {
       setTarjetaVencimiento('')
       setTarjetaCVV('')
       setCambioManual(false)
+      setReservarAlmasInocentes(false)
       setRespuestasSombra({})
       cargarLotes()
     } catch (err) {
@@ -381,10 +430,11 @@ export default function Cementerio() {
               </div>
             ))}
             <button
-              onClick={() => { asignarLote(); setPaso(2) }}
-              className="rounded-full px-8 py-3 bg-red-900/80 hover:bg-red-800 text-white font-bold"
+              onClick={handleAsignarLote}
+              disabled={lotesLoading || !cliente}
+              className="rounded-full px-8 py-3 bg-red-900/80 hover:bg-red-800 text-white font-bold disabled:opacity-50"
             >
-              ASIGNAR LOTE
+              {lotesLoading ? 'Cargando lotes...' : !cliente ? 'Busca el cliente primero' : 'ASIGNAR LOTE'}
             </button>
           </div>
         )}
@@ -392,19 +442,31 @@ export default function Cementerio() {
         {paso === 2 && (
           <div className="space-y-6">
             
-            {loteAsignado && (
+            {(loteAsignado || loteSeleccionado || reservarAlmasInocentes) && loteEfectivo() && (
               <div className="p-4 rounded-xl border-2 border-red-900/60 bg-black/60 max-w-md mx-auto">
-                <p className="text-red-400 font-bold">Lote asignado: {loteAsignado.nombre}</p>
-                <p className="text-white/80">Código: {loteAsignado.codigo}</p>
-                <p className="text-white/80">Disponibles: {loteAsignado.capacidad_total - loteAsignado.capacidad_ocupada}</p>
-                <p className="text-red-400 font-bold">Valor: ${loteAsignado.valor}</p>
-                {/* F. Cambiar el lote manualmente */}
-                <button
-                  onClick={() => setCambioManual(true)}
-                  className="mt-2 text-amber-400 hover:underline text-sm"
-                >
-                  Cambiar lote manualmente (+$1.000.000)
-                </button>
+                <p className="text-red-400 font-bold">
+                  Lote a reservar: {loteSeleccionado ? loteSeleccionado.nombre : loteEfectivo()?.nombre}
+                  {loteSeleccionado && <span className="text-amber-400 text-sm ml-2">(cambio manual)</span>}
+                  {reservarAlmasInocentes && !loteSeleccionado && <span className="text-amber-400 text-sm ml-2">(elegido en pago)</span>}
+                </p>
+                <p className="text-white/80">Código: {loteEfectivo()?.codigo}</p>
+                <p className="text-white/80">Disponibles: {loteEfectivo() ? loteEfectivo().capacidad_total - loteEfectivo().capacidad_ocupada : '-'}</p>
+                <p className="text-red-400 font-bold">
+                  Valor: ${(loteEfectivo()?.valor || 0).toLocaleString('es-CO')}
+                  {reservarAlmasInocentes && !loteSeleccionado && (
+                    <> + ${(loteAsignado?.valor || 0).toLocaleString('es-CO')} (lote asignado) + $1.000.000 (valor excedente)</>
+                  )}
+                  {cambioManual && ' + $1.000.000 (cambio manual)'}
+                </p>
+                {/* F. Cambiar lote manualmente solo cuando eligió Almas Inocentes en pago */}
+                {!cambioManual && reservarAlmasInocentes && (
+                  <button
+                    onClick={() => setCambioManual(true)}
+                    className="mt-2 text-amber-400 hover:underline text-sm"
+                  >
+                    Cambiar lote manualmente (+$1.000.000)
+                  </button>
+                )}
               </div>
             )}
             {/* F. Retornar el cambio manual del lote */}
@@ -412,7 +474,7 @@ export default function Cementerio() {
               <div className="max-w-lg mx-auto">
                 <p className="text-amber-400 mb-2">Selecciona otro lote:</p>
                 <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                  {lotes.filter((l) => l.capacidad_ocupada < l.capacidad_total).map((l) => (
+                  {lotes.filter((l) => l.capacidad_ocupada < l.capacidad_total && l.nombre !== 'ALMAS INOCENTES').map((l) => (
                     <button
                       key={l.id}
                       type="button"
@@ -478,10 +540,30 @@ export default function Cementerio() {
                   </div>
                 ))}
               </div>
+              {/* F. Mostrar resultado del Test de la Sombra cuando estén las 7 respuestas */}
+              {PREGUNTAS_SOMBRA.every((p) => respuestasSombra[p.id]) && (
+                <div className="mt-4 p-4 rounded-lg border-2 border-amber-600/60 bg-amber-950/30">
+                  <p className="text-amber-400 font-bold">
+                    ☠️ Resultado del Test: <span className="text-white">{calcularResultadoSombra(respuestasSombra).pecado}</span>
+                  </p>
+                  <p className="text-gray-400 text-sm mt-1">Pecado capital dominante del difunto</p>
+                </div>
+              )}
             </div>
             {/* F. Retornar el valor a pagar */}
             <div className="max-w-md mx-auto">
-              <p className="text-red-400 font-bold">Valor a pagar: $<span>{valorTotal()}</span></p>
+              <p className="text-red-400 font-bold">Valor a pagar: $<span>{(valorTotal() || 0).toLocaleString('es-CO')}</span></p>
+              <label className="flex items-center gap-2 cursor-pointer mb-4 mt-2">
+                <input
+                  type="checkbox"
+                  checked={reservarAlmasInocentes}
+                  onChange={(e) => { setReservarAlmasInocentes(e.target.checked); if (e.target.checked) setCambioManual(false); setLoteSeleccionado(null) }}
+                  className="rounded border-red-900/50"
+                />
+                <span className="text-amber-400">
+                  Reservar en Almas Inocentes: ${(loteAsignado?.valor || 0).toLocaleString('es-CO')} (lote asignado) + ${(lotes.find((l) => l.nombre === 'ALMAS INOCENTES')?.valor || 0).toLocaleString('es-CO')} (Inocente) + $1.000.000 (valor excedente)
+                </span>
+              </label>
               <p className="text-white/90 mb-2">Método de pago</p>
               <div className="flex flex-wrap gap-4 mb-4">
                 {['efectivo', 'tarjeta', 'con_la_vida'].map((m) => (
@@ -530,10 +612,13 @@ export default function Cementerio() {
                   </div>
                 </div>
               )}
+              {!cliente && (
+                <p className="text-amber-400 text-sm mb-2">⚠️ Busca y valida el cliente antes de confirmar (vuelve al paso 1 o usa la cédula arriba)</p>
+              )}
               <div className="flex gap-2">
                 <button onClick={() => setPaso(1)} className="rounded-full py-2 px-6 border border-red-600 text-red-400">Atrás</button>
-                <button onClick={confirmarReserva} disabled={loading} className="flex-1 rounded-full py-2 bg-green-900/80 hover:bg-green-800 text-white font-bold disabled:opacity-50">
-                  SELLAR DESTINO
+                <button onClick={confirmarReserva} disabled={loading || !cliente} className="flex-1 rounded-full py-2 bg-green-900/80 hover:bg-green-800 text-white font-bold disabled:opacity-50">
+                  {!cliente ? 'Busca el cliente primero' : 'SELLAR DESTINO'}
                 </button>
               </div>
             </div>

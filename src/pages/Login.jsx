@@ -1,15 +1,18 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/useAuth'
+import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 /* F. Retornar el layout de la pagina de login */
 export default function Login() {
-  const [email, setEmail] = useState('') /* F. Retornar el email */
-  const [password, setPassword] = useState('') /* F. Retornar la contraseña */
-  const [loading, setLoading] = useState(false) /* F. Retornar el estado de carga */
-  const { signIn } = useAuth() /* F. Retornar el signIn */
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { signIn } = useAuth()
   const navigate = useNavigate()
-  /* F. Manejar el submit del formulario */
+  const location = useLocation()
+  const from = location.state?.from?.pathname
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email || !password) {
@@ -18,9 +21,12 @@ export default function Login() {
     }
     setLoading(true)
     try {
-      await signIn(email, password)
+      const { data: authData } = await signIn(email, password)
       toast.success('⸸ Bienvenido al templo ⸸')
-      navigate('/dashboard')
+      const { data: profile } = await supabase.from('user_profiles').select('rol').eq('user_id', authData?.user?.id).single()
+      const rol = profile?.rol ?? 2
+      const destino = from || (rol === 3 ? '/mi-cementerio' : '/dashboard')
+      navigate(destino, { replace: true })
     } catch (err) {
       toast.error(err.message || 'Error al iniciar sesión')
     } finally {
@@ -61,9 +67,13 @@ export default function Login() {
             {loading ? 'Entrando...' : 'ENTRAR'}
           </button>
         </form>
-        <p className="mt-4 text-center text-gray-400 text-sm">
-          ¿No tienes cuenta?{' '}
-          <Link to="/registro" className="text-red-400 hover:underline">Regístrate como vendedor</Link>
+        <p className="mt-4 text-center text-gray-400 text-sm space-y-2">
+          <span className="block">¿No tienes cuenta?</span>
+          <span>
+            <Link to="/registro-cliente" className="text-red-400 hover:underline font-medium">Regístrate como cliente</Link>
+            {' · '}
+            <Link to="/registro" className="text-red-400 hover:underline">Regístrate como vendedor</Link>
+          </span>
         </p>
       </div>
     </div>

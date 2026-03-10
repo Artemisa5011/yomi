@@ -1,4 +1,3 @@
--- ============================================
 -- Roles + Portal Cliente (Opción recomendada)
 -- - Admin: rol 666
 -- - Vendedor: rol 2 (default)
@@ -7,7 +6,7 @@
 -- Ejecutar después de:
 -- 001_schema.sql, 002_rls.sql, 003_realtime.sql, 004_reglas_negocio.sql
 -- (y después de 006_valor_total.sql si lo usas)
--- ============================================
+
 
 -- 1) Tabla de perfiles/roles (no depende de app_metadata editable)
 CREATE TABLE IF NOT EXISTS public.user_profiles (
@@ -244,4 +243,3 @@ FOR ALL
 TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
-

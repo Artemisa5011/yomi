@@ -1,14 +1,11 @@
--- ============================================
--- YOMI NO HANA - Esquema de base de datos
--- ============================================
+-- YOMI NO HANA - BASE DE DATOS
 -- Ejecutar en Supabase SQL Editor (en orden)
-
 -- Extensión para UUID
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- ============================================
+
 -- TABLA: empleados (vendedores)
--- ============================================
+
 CREATE TABLE empleados (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -22,9 +19,9 @@ CREATE TABLE empleados (
 CREATE UNIQUE INDEX idx_empleados_cedula ON empleados(cedula);
 CREATE INDEX idx_empleados_user_id ON empleados(user_id);
 
--- ============================================
+
 -- TABLA: clientes
--- ============================================
+
 CREATE TABLE clientes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -44,9 +41,9 @@ CREATE UNIQUE INDEX idx_clientes_cedula_per_user ON clientes(user_id, cedula);
 
 -- Regla de negocio DB: No duplicar cédula por usuario (UNIQUE ya lo garantiza)
 
--- ============================================
+
 -- TABLA: lotes (catálogo cementerio)
--- ============================================
+
 CREATE TABLE lotes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   codigo VARCHAR(50) NOT NULL UNIQUE,
@@ -58,20 +55,18 @@ CREATE TABLE lotes (
 
 -- Lotes según especificación
 INSERT INTO lotes (codigo, nombre, capacidad_total, valor) VALUES
-  ('LUJURIA_10', 'LUJURIA', 10, 200),
-  ('GULA_30', 'GULA', 30, 210),
-  ('AVARICIA_12', 'AVARICIA', 12, 300),
-  ('PEREZA_15', 'PEREZA', 15, 500),
-  ('IRA_50', 'IRA', 50, 800),
-  ('ENVIDIA_80', 'ENVIDIA', 80, 32),
-  ('IRA_2', 'IRA', 2, 800),
-  ('SOBERBIA_21', 'SOBERBIA', 21, 420),
-  ('IRA_35', 'IRA', 35, 800),
-  ('ALMAS_INOCENTES_50', 'ALMAS INOCENTES', 50, 10000);
+  ('LUJURIA_10', 'LUJURIA', 100, 200000),
+  ('GULA_30', 'GULA', 300, 210000),
+  ('AVARICIA_12', 'AVARICIA', 120, 300000),
+  ('PEREZA_15', 'PEREZA', 150, 500000),
+  ('IRA_50', 'IRA', 500, 800000),
+  ('ENVIDIA_80', 'ENVIDIA', 800, 320000),
+  ('SOBERBIA_21', 'SOBERBIA', 210, 420000),
+  ('ALMAS_INOCENTES_50', 'ALMAS INOCENTES', 1500, 500000);
 
--- ============================================
+
 -- TABLA: servicios_funerarios (Rituales, Ofrendas, Sombras)
--- ============================================
+
 CREATE TABLE servicios_funerarios (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   cliente_id UUID NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
@@ -115,9 +110,9 @@ CREATE TRIGGER trg_max_servicios_por_dia
   FOR EACH ROW
   EXECUTE PROCEDURE fn_max_servicios_por_dia();
 
--- ============================================
+
 -- TABLA: reservas_cementerio
--- ============================================
+
 CREATE TABLE reservas_cementerio (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   cliente_id UUID NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,

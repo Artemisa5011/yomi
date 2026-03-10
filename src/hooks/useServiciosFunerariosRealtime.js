@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import * as api from '../api/serviciosFunerariosApi'
+import toast from 'react-hot-toast'
 /* mergear los servicios funerarios */
 function mergeById(list, item) {
   if (!item) return list
@@ -26,8 +27,12 @@ export function useServiciosFunerariosRealtime() {
         setServicios(data)
         setLoading(false)
       }
-    }).catch(() => {
-      if (mounted) setLoading(false)
+    }).catch((err) => {
+      if (mounted) {
+        setLoading(false)
+        console.error('Error cargando calendario:', err)
+        toast.error(err?.message || 'Error al cargar servicios. Revisa permisos RLS.')
+      }
     })
     /* Suscribir los servicios funerarios */
     const unsub = api.subscribeServiciosFunerariosRealtime(
