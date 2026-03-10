@@ -139,11 +139,11 @@ La pagina es SPA - Single Page Applications Permite cambiar entre diferentes vis
 3. **Nuevo sitio desde Git**  
    - Click en **Add new site** → **Import an existing project**.  
    - Conecta **GitHub** y autoriza a Netlify.  
-   - Elige el repositorio donde está `yomi-app` (o el repo que tenga el proyecto).
+   - Elige el repositorio donde está `yomi-no-hana` (o el repo que tenga el proyecto).
 
 4. **Configuración del build**  
    - **Branch to deploy**: `main` (o la rama que uses).  
-   - **Base directory**: si el proyecto está en una subcarpeta, escribe `yomi-app`. Si todo el repo es el proyecto, déjalo vacío.  
+   - **Base directory**: si el proyecto está en una subcarpeta, escribe `yomi-no-hana`. Si todo el repo es el proyecto, déjalo vacío.  
    - **Build command**: `npm run build`  
    - **Publish directory**: `dist`  
    - **Variables de entorno** (Importante):  
