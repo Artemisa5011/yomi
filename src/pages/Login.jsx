@@ -9,9 +9,15 @@ export default function Login() {
   const [password, setPassword] = useState('')
   useEffect(() => {
     const reason = sessionStorage.getItem('logout_reason')
+    sessionStorage.removeItem('logout_reason')
     if (reason === 'cuenta_desactivada') {
-      sessionStorage.removeItem('logout_reason')
       toast.error('Tu cuenta ha sido desactivada. Contacta al administrador.')
+    } else if (reason === 'profile_error') {
+      toast.error('Error al verificar perfil. Intenta de nuevo.')
+    } else if (reason === 'network_error') {
+      toast.error('Error de red. Verifica conexión y que el proyecto Supabase esté activo.')
+    } else if (reason) {
+      toast.error(reason)
     }
   }, [])
   const [loading, setLoading] = useState(false)
@@ -28,13 +34,36 @@ export default function Login() {
     }
     setLoading(true)
     try {
-      const { data: authData } = await signIn(email, password)
-      const { data: profile } = await supabase.from('user_profiles').select('rol').eq('user_id', authData?.user?.id).single()
+      const authData = await signIn(email, password)
+      const userId = authData?.user?.id
+      if (!userId) {
+        toast.error('Error al obtener sesión. Intenta de nuevo.')
+        setLoading(false)
+        return
+      }
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('rol')
+        .eq('user_id', userId)
+        .single()
+      if (profileError) {
+        await supabase.auth.signOut()
+        const msg = profileError?.message || ''
+        if (msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('network')) {
+          toast.error('Error de red. ¿Proyecto Supabase activo? Revisa conexión y .env')
+        } else if (msg.includes('PGRST116') || msg.includes('0 rows')) {
+          toast.error('Perfil no encontrado. Ejecuta db/025_fix_admin_rol_666.sql en Supabase')
+        } else {
+          toast.error('Error al verificar perfil: ' + (msg || 'Intenta de nuevo'))
+        }
+        setLoading(false)
+        return
+      }
       const rol = profile?.rol ?? 2
-      /* Vendedor inactivo: bloquear acceso */
+      /* Solo vendedores (rol 2): verificar empleado activo. Admin (666) y cliente (3) nunca se bloquean */
       if (rol === 2) {
-        const { data: emp } = await supabase.from('empleados').select('estado').eq('user_id', authData?.user?.id).single()
-        if (emp?.estado === 'inactivo') {
+        const { data: emp } = await supabase.from('empleados').select('estado').eq('user_id', userId).single()
+        if (!emp || emp?.estado === 'inactivo') {
           await supabase.auth.signOut()
           toast.error('Tu cuenta ha sido desactivada. Contacta al administrador.')
           setLoading(false)

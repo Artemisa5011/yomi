@@ -45,20 +45,24 @@ export default function Dashboard() {
       toast.error(err.message)
     }
   }
-  /* F. Eliminar el cliente */
+  /* F. Eliminar el cliente (optimistic: quita de la lista al instante; rollback si falla) */
   const handleDeleteCliente = async (id, nombre) => {
     if (!window.confirm(`¿Eliminar cliente "${nombre}"? No se puede deshacer.`)) return
+    const backupClientes = [...clientes]
+    const backupEncontrado = clienteEncontrado?.id === id ? clienteEncontrado : null
     setDeletingId(id)
+    setClientes((prev) => prev.filter((c) => c.id !== id))
+    if (clienteEncontrado?.id === id) setClienteEncontrado(null)
     try {
       await clientesApi.deleteCliente(id)
-      setClientes((prev) => prev.filter((c) => c.id !== id))
-      if (clienteEncontrado?.id === id) setClienteEncontrado(null)
       toast.success('Cliente eliminado')
     } catch (err) {
+      setClientes(backupClientes)
+      if (backupEncontrado) setClienteEncontrado(backupEncontrado)
       if (err?.code === '23503') {
-        toast.error('No se puede eliminar: tiene servicios o reservas asociados.')
+        toast.error('No se puede eliminar: tiene servicios o reservas. Cambios revertidos.')
       } else {
-        toast.error(err.message)
+        toast.error('Error al eliminar. Cambios revertidos.')
       }
     } finally {
       setDeletingId(null)

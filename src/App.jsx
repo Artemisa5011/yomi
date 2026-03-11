@@ -16,6 +16,7 @@ import Funeraria from './pages/Funeraria'
 import Cementerio from './pages/Cementerio'
 import MiCementerio from './pages/MiCementerio'
 import Admin from './pages/Admin'
+import EmpleadoEditar from './pages/EmpleadoEditar'
 import { RoleRoute } from './components/RoleRoute'
 
 /* Retornar el layout de la aplicacion */
@@ -105,6 +106,14 @@ export default function App() {
             element={
               <RoleRoute allow={[666]}>
                 <Admin />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/empleados/editar/:id"
+            element={
+              <RoleRoute allow={[666]}>
+                <EmpleadoEditar />
               </RoleRoute>
             }
           />

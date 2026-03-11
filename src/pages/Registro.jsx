@@ -33,18 +33,17 @@ export default function Registro() {
     /* funcion para cargar el formulario */
     setLoading(true) 
     try {
-      const { data, error } = await signUp(form.correo, form.password, {
+      const signUpData = await signUp(form.correo, form.password, {
         cedula: form.cedula,
         nombre_completo: form.nombre_completo,
         telefono: form.telefono
       })
-      if (error) throw error
 
       /* Crear el empleado via RPC (funciona con admin o nuevo usuario) */
-      if (data?.user) {
+      if (signUpData?.user) {
         try {
           await empleadosApi.createEmpleadoRpc({
-            user_id: data.user.id,
+            user_id: signUpData.user.id,
             cedula: form.cedula.trim(),
             nombre_completo: form.nombre_completo.trim(),
             telefono: form.telefono?.trim() || null,
@@ -55,6 +54,10 @@ export default function Registro() {
           setLoading(false)
           return
         }
+      } else {
+        toast.error('Error al crear la cuenta. Intenta de nuevo.')
+        setLoading(false)
+        return
       }
       toast.success('⸸ Registro completado. Inicia sesión ⸸')
       navigate('/login')

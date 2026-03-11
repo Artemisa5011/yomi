@@ -12,6 +12,8 @@ export default function Admin() {
   const [empleados, setEmpleados] = useState([])
   const [loadingEmpleados, setLoadingEmpleados] = useState(true)
   const [togglingId, setTogglingId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+  const [ventasPorEmpleado, setVentasPorEmpleado] = useState({})
 
   useEffect(() => {
     cargarEmpleados()
@@ -21,6 +23,13 @@ export default function Admin() {
     try {
       const data = await empleadosApi.listEmpleados()
       setEmpleados(data)
+      const ventas = {}
+      await Promise.all(
+        data.map(async (e) => {
+          ventas[e.id] = await empleadosApi.empleadoTieneVentas(e.user_id)
+        })
+      )
+      setVentasPorEmpleado(ventas)
     } catch (err) {
       toast.error(err.message)
     } finally {
@@ -28,16 +37,39 @@ export default function Admin() {
     }
   }
 
+  const handleEliminar = async (id, nombre, userId) => {
+    const tieneVentas = ventasPorEmpleado[id]
+    if (tieneVentas) {
+      toast.error('No se puede eliminar: el vendedor tiene ventas. Desactívalo en su lugar.')
+      return
+    }
+    if (!window.confirm(`¿Eliminar vendedor "${nombre}" por completo? Se borrará su cuenta (correo liberado). Esta acción no se puede deshacer.`)) return
+    const backup = [...empleados]
+    setDeletingId(id)
+    setEmpleados((prev) => prev.filter((e) => e.id !== id))
+    try {
+      await empleadosApi.deleteVendedorCompleto(userId)
+      toast.success('Vendedor eliminado por completo (cuenta y correo liberados)')
+    } catch (err) {
+      setEmpleados(backup)
+      toast.error(err.message + ' Cambios revertidos.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   const handleToggleEstado = async (id, nombre, estadoActual) => {
     const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo'
     if (!window.confirm(`¿Cambiar estado de "${nombre}" a ${nuevoEstado}? ${nuevoEstado === 'inactivo' ? 'No podrá volver a ingresar.' : 'Podrá acceder de nuevo.'}`)) return
+    const backup = [...empleados]
     setTogglingId(id)
+    setEmpleados((prev) => prev.map((e) => (e.id === id ? { ...e, estado: nuevoEstado } : e)))
     try {
       await empleadosApi.updateEmpleadoEstado(id, nuevoEstado)
-      setEmpleados((prev) => prev.map((e) => (e.id === id ? { ...e, estado: nuevoEstado } : e)))
       toast.success(`Estado actualizado a ${nuevoEstado}`)
     } catch (err) {
-      toast.error(err.message)
+      setEmpleados(backup)
+      toast.error(err.message + ' Cambios revertidos.')
     } finally {
       setTogglingId(null)
     }
@@ -85,7 +117,7 @@ export default function Admin() {
 
         <Seccion title="👥 Vendedores">
           <p className="text-gray-400 text-sm mb-4">
-            Cambia el estado a <span className="text-amber-400">inactivo</span> si un vendedor renuncia o es despedido. No podrá volver a ingresar, pero sus ventas se conservan.
+            Sin ventas: puede <span className="text-red-400">eliminarse</span>. Con ventas: solo <span className="text-amber-400">Desactivar/Reactivar</span> (no se eliminan las ventas).
           </p>
           {loadingEmpleados ? (
             <p className="text-gray-400">Cargando vendedores...</p>
@@ -115,14 +147,33 @@ export default function Admin() {
                         </span>
                       </td>
                       <td className="py-2">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleEstado(e.id, e.nombre_completo, e.estado)}
-                          disabled={togglingId === e.id}
-                          className={`text-sm rounded px-3 py-1 ${e.estado === 'activo' ? 'bg-amber-900/50 text-amber-400 hover:bg-amber-900/70' : 'bg-green-900/50 text-green-400 hover:bg-green-900/70'} disabled:opacity-50`}
-                        >
-                          {e.estado === 'activo' ? 'Desactivar' : 'Reactivar'}
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <Link
+                            to={`/empleados/editar/${e.id}`}
+                            className="text-sm rounded px-3 py-1 bg-red-900/50 text-red-400 hover:bg-red-900/70"
+                          >
+                            Editar
+                          </Link>
+                          {ventasPorEmpleado[e.id] ? (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleEstado(e.id, e.nombre_completo, e.estado)}
+                              disabled={togglingId === e.id}
+                              className={`text-sm rounded px-3 py-1 ${e.estado === 'activo' ? 'bg-amber-900/50 text-amber-400 hover:bg-amber-900/70' : 'bg-green-900/50 text-green-400 hover:bg-green-900/70'} disabled:opacity-50`}
+                            >
+                              {e.estado === 'activo' ? 'Desactivar' : 'Reactivar'}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleEliminar(e.id, e.nombre_completo, e.user_id)}
+                              disabled={deletingId === e.id}
+                              className="text-sm rounded px-3 py-1 bg-red-950/70 text-red-300 hover:bg-red-900/70 disabled:opacity-50"
+                            >
+                              Eliminar
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -23,9 +23,13 @@ export function AuthProvider({ children }) {
         .eq('user_id', u.id)
         .single()
       if (error) {
-        // Fallback: si aún no ejecutaste db/007_roles_portal.sql
-        setRol(2)
+        const msg = error?.message || ''
+        sessionStorage.setItem('logout_reason', msg.toLowerCase().includes('fetch') ? 'network_error' : 'profile_error')
+        await supabase.auth.signOut()
+        setUser(null)
+        setRol(null)
         setNombreCompleto('')
+        setLoading(false)
         return
       }
       setRol(data?.rol ?? 2)
@@ -40,14 +44,14 @@ export function AuthProvider({ children }) {
       } catch {
         /* RPC no existe o falló */
       }
-      /* Vendedor (rol 2): verificar estado activo y obtener nombre */
+      /* Vendedor (rol 2): verificar que tenga empleado y estado activo */
       if (data?.rol === 2) {
         const { data: emp } = await supabase
           .from('empleados')
           .select('nombre_completo, estado')
           .eq('user_id', u.id)
           .single()
-        if (emp?.estado === 'inactivo') {
+        if (!emp || emp?.estado === 'inactivo') {
           sessionStorage.setItem('logout_reason', 'cuenta_desactivada')
           await supabase.auth.signOut()
           setUser(null)
