@@ -30,13 +30,15 @@ BEGIN
     RAISE EXCEPTION 'El nombre completo es obligatorio.';
   END IF;
 
-  INSERT INTO public.empleados (user_id, cedula, nombre_completo, telefono, correo)
+  -- Nuevas cuentas vendedor quedan activas; solo admin puede cambiar estado
+  INSERT INTO public.empleados (user_id, cedula, nombre_completo, telefono, correo, estado)
   VALUES (
     p_user_id,
     TRIM(p_cedula),
     TRIM(p_nombre_completo),
     NULLIF(TRIM(p_telefono), ''),
-    NULLIF(TRIM(p_correo), '')
+    NULLIF(TRIM(p_correo), ''),
+    'activo'
   )
   RETURNING id INTO v_id;
 
