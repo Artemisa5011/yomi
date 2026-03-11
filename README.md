@@ -89,6 +89,20 @@ ON CONFLICT (user_id) DO UPDATE SET rol = 666;
 
 **Si sale "No puedes cambiar tu rol"**: ejecuta primero `db/009_fix_role_trigger.sql` y luego el `INSERT` de arriba.
 
+### Paso 5b (opcional): Eliminar vendedor por completo
+
+Para que el botón **Eliminar** borre la cuenta auth del vendedor (correo liberado para usarse luego como cliente), ejecuta desde la **raíz del proyecto** (misma carpeta donde está `package.json`):
+
+```bash
+npm i -g supabase
+supabase link
+supabase functions deploy delete-vendedor-auth
+```
+
+La función usa `SUPABASE_SERVICE_ROLE_KEY` (se configura automáticamente en Supabase).
+
+Si no despliegas la función, el botón **Eliminar** no funcionará; usa **Desactivar** para vendedores.
+
 ### Paso 6: Ejecutar la aplicación
 
 ```bash
@@ -96,6 +110,25 @@ npm run dev
 ```
 
 Abre `http://localhost:5173` en el navegador.
+
+### Si aparece "Error al verificar perfil" o "Failed to fetch" al iniciar sesión
+
+1. **Proyecto Supabase pausado**: En Supabase → Dashboard, si ves "Project paused", haz clic en **Restore** (proyectos gratis se pausan tras inactividad).
+2. **Variables de entorno**: Revisa `.env` – `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` correctos (Settings → API en Supabase).
+3. **Reiniciar**: Tras cambiar `.env`, reinicia con `npm run dev`.
+4. **Perfiles faltantes**: Ejecuta en Supabase SQL Editor:
+   ```sql
+   -- Ver usuarios y roles
+   SELECT u.email, p.rol FROM auth.users u
+   LEFT JOIN public.user_profiles p ON p.user_id = u.id;
+   -- Crear/actualizar admin
+   INSERT INTO public.user_profiles (user_id, rol)
+   SELECT id, 666 FROM auth.users WHERE email = 'TU_EMAIL_ADMIN'
+   ON CONFLICT (user_id) DO UPDATE SET rol = 666;
+   ```
+
+5. **Admin no ve vendedores**: Si el panel Admin muestra "No hay vendedores" pero tienes usuarios con rol 2, ejecuta `db/027_crear_empleados_para_vendedores_existentes.sql` para crear las filas faltantes en `empleados`.
+6. **Vendedores con datos placeholder** (NOMBRE_REAL, CÉDULA_REAL): Ejecuta `db/028_actualizar_empleados_desde_metadata.sql` para recuperar datos reales desde la metadata del registro.
 
 ---
 
@@ -106,6 +139,30 @@ Abre `http://localhost:5173` en el navegador.
 | `npm run dev` | Desarrollo (puerto 5173) |
 | `npm run build` | Build de producción |
 | `npm run preview` | Vista previa del build |
+
+---
+
+## CRUD mínimo (2 entidades)
+
+La app implementa CRUD completo para **Clientes** y **Empleados** (vendedores).
+
+### 1. Clientes
+
+| Operación | API | Página / Ruta | Notas |
+|-----------|-----|---------------|-------|
+| **C**reate | `clientesApi.createCliente` | `/clientes/nuevo` (ClienteNuevo) | Tras buscar cédula inexistente en Dashboard |
+| **R**ead | `listClientes`, `getClienteById`, `getClienteByCedula` | Dashboard (lista y búsqueda), `/clientes/detalle/:id` | Detalle incluye servicios y reservas |
+| **U**pdate | `clientesApi.updateCliente` | `/clientes/editar/:id` (ClienteEditar) | Teléfono, correo, departamento, ciudad |
+| **D**elete | `clientesApi.deleteCliente` | Dashboard (botón Eliminar) | Bloqueado si cliente es verdugo (tiene servicios) |
+
+### 2. Empleados (vendedores)
+
+| Operación | API | Página / Ruta | Notas |
+|-----------|-----|---------------|-------|
+| **C**reate | `empleadosApi.createEmpleadoRpc` | `/registro` (Registro) | Solo admin. Crea empleado + user_profile rol 2 |
+| **R**ead | `listEmpleados`, `getEmpleadoById` | `/admin` (lista vendedores), `/empleados/editar/:id` | Admin ve todos |
+| **U**pdate | `updateEmpleado`, `updateEmpleadoEstado` | `/empleados/editar/:id`, Admin (Desactivar/Reactivar) | Editar: cédula, nombre, teléfono, correo |
+| **D**elete | `deleteVendedorCompleto` (sin ventas) / `updateEmpleadoEstado` (con ventas) | `/admin` (Eliminar o Desactivar) | Sin ventas: borra cuenta completa. Con ventas: solo desactivar |
 
 ---
 
@@ -174,21 +231,33 @@ Abre `http://localhost:5173` en el navegador.
 
 - [ ] Registrar vendedor
 - [ ] Dashboard
-- [ ] **Vendedores**: listar, Desactivar/Reactivar. Inactivo no puede ingresar; ventas se conservan
+- [ ] **Vendedores**: listar, Editar, Eliminar por completo (sin ventas: borra cuenta; correo liberado), Desactivar/Reactivar (con ventas)
 - [ ] **Vincular cliente portal**: ingresar cédula para vincular servicios/reservas
 
 ### 8. Reglas de negocio
 
+- [ ] **Cuentas nuevas**: Admin, vendedor y cliente quedan activas al crearse. Solo el admin puede Desactivar/Reactivar vendedores.
 - [ ] Registrar cliente con cédula duplicada → error
 - [ ] Más de 3 servicios funerarios por día → error
 - [ ] Cliente pasa a "verdugo" al contratar servicio
 - [ ] No eliminar cliente verdugo → botón deshabilitado
 - [ ] Vendedor inactivo intenta login → mensaje "Cuenta desactivada"
 
-### 9. Optimistic update
+### 9. Optimistic update con rollback
 
-- [ ] Editar cliente → Guardar
-- [ ] Simular error (desconectar red) → rollback + toast
+Actualización optimista: la UI cambia al instante; si la petición falla, se revierten los cambios y se muestra toast.
+
+| Acción | Dónde | Prueba |
+|--------|-------|--------|
+| Editar cliente (formulario) | ClienteEditar | Guardar con red desconectada → formulario revierte, toast "Cambios revertidos" |
+| Editar vendedor (formulario) | EmpleadoEditar | Idem |
+| Eliminar cliente de la lista | Dashboard | Eliminar con red desconectada → cliente vuelve a la lista, toast |
+| Eliminar vendedor | Admin | Idem |
+| Desactivar/Reactivar vendedor | Admin | Cambiar estado con red desconectada → estado revierte, toast |
+
+- [ ] Desconectar red (DevTools → Network → Offline)
+- [ ] Probar una acción (editar, eliminar, desactivar)
+- [ ] Ver que la UI revierte y aparece toast "Cambios revertidos"
 
 ---
 
@@ -252,11 +321,12 @@ git push -u origin main
 | **Registro cliente** | Validación contraseña, cédula duplicada, correo existente |
 | **Detalle cliente** | Datos, servicios funerarios, reservas cementerio |
 | **Mis Difuntos** | Cliente ve servicios y reservas (solo lectura). Vinculación automática o manual |
-| **Panel Admin** | Vendedores (Desactivar/Reactivar), Vincular cliente portal |
+| **Panel Admin** | Vendedores (CRUD: Editar, Eliminar/Desactivar), Vincular cliente portal |
+| **CRUD mínimo** | Clientes y Empleados: Create, Read, Update, Delete (ver sección anterior) |
 | **Cliente verdugo** | No se puede eliminar (FK RESTRICT, botón deshabilitado) |
 | **Vendedor inactivo** | Admin desactiva; no puede ingresar; ventas se conservan |
 | **Montos** | Formato legible ($100.000) con toLocaleString es-CO |
-| **Scripts db/** | 014-019 base. 020-024 nuevos. Ver `docs/MIGRACIONES_DB.md` |
+| **Scripts db/** | 014-019 base. 020-028: migraciones y correcciones. Ver `docs/MIGRACIONES_DB.md` |
 
 ---
 
@@ -279,8 +349,17 @@ yomi-no-hana/
 | `/registro-cliente` | Público | Registrar cliente portal |
 | `/dashboard` | Vendedor/Admin | Panel vendedor |
 | `/admin` | Admin (666) | Panel admin |
+| `/empleados/editar/:id` | Admin (666) | Editar vendedor |
 | `/funeraria`, `/cementerio` | Vendedor/Admin | Venta |
 | `/mi-cementerio` | Cliente (3) | Mis Difuntos |
 | `/clientes/nuevo`, `/editar/:id`, `/detalle/:id` | Vendedor/Admin | CRUD clientes |
 
-**Scripts de diagnóstico:** `018_diagnostico_vinculacion.sql` – consultas para revisar servicios sin vincular y cédulas en portal.
+**Scripts de diagnóstico y corrección:**
+
+| Archivo | Uso |
+|---------|-----|
+| `018_diagnostico_vinculacion.sql` | Servicios/reservas sin vincular, cédulas en portal |
+| `025_fix_admin_rol_666.sql` | Corregir rol admin si aparece "Cuenta desactivada" |
+| `026_crear_empleado_faltante.sql` | Crear empleado para UN vendedor (reemplazar placeholders) |
+| `027_crear_empleados_para_vendedores_existentes.sql` | Crear empleados para TODOS los vendedores (rol 2) sin fila |
+| `028_actualizar_empleados_desde_metadata.sql` | Actualizar empleados con datos reales desde metadata |
