@@ -40,11 +40,10 @@ export default function Registro() {
       })
       if (error) throw error
 
-      /* funcion para crear el empleado */
+      /* Crear el empleado via RPC (funciona con admin o nuevo usuario) */
       if (data?.user) {
         try {
-          
-          await empleadosApi.createEmpleado({
+          await empleadosApi.createEmpleadoRpc({
             user_id: data.user.id,
             cedula: form.cedula.trim(),
             nombre_completo: form.nombre_completo.trim(),
@@ -52,10 +51,11 @@ export default function Registro() {
             correo: form.correo.trim()
           })
         } catch (empError) {
-          if (empError.code === '23505') toast.error('Ya existe un vendedor con esa cédula')
-          else throw empError
+          toast.error(empError.message || 'Error al crear el vendedor')
+          setLoading(false)
+          return
         }
-      }/* Mostrar el mensaje de exito */
+      }
       toast.success('⸸ Registro completado. Inicia sesión ⸸')
       navigate('/login')
     } catch (err) {

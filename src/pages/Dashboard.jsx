@@ -158,8 +158,9 @@ export default function Dashboard() {
                       <button
                         type="button"
                         onClick={() => handleDeleteCliente(c.id, c.nombre_completo)}
-                        disabled={deletingId === c.id}
-                        className="text-amber-400 hover:underline disabled:opacity-50"
+                        disabled={deletingId === c.id || c.estado === 'verdugo'}
+                        title={c.estado === 'verdugo' ? 'No se puede eliminar: tiene servicios contratados' : 'Eliminar cliente'}
+                        className="text-amber-400 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Eliminar
                       </button>

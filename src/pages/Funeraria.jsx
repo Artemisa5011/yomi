@@ -10,9 +10,9 @@ import { useAuth } from '../contexts/useAuth'
 import toast from 'react-hot-toast'
 
 const SERVICIOS = [
-  { tipo: 'ritual', nombre: 'Rituales', valor: 1000 },
-  { tipo: 'ofrenda', nombre: 'Ofrendas', valor: 5000 },
-  { tipo: 'sombra', nombre: 'Sombras', valor: 10000 }
+  { tipo: 'ritual', nombre: 'Rituales', valor: 300000 },
+  { tipo: 'ofrenda', nombre: 'Ofrendas', valor: 500000 },
+  { tipo: 'sombra', nombre: 'Sombras', valor: 1000000 }
 ]
   /* formato 24 horas */
 const HORAS = [
@@ -155,7 +155,7 @@ export default function Funeraria() {
       }))
       await serviciosFunerariosApi.createServiciosFunerarios(rows)    
       await clientesApi.updateCliente(cliente.id, { estado: 'verdugo' })      
-      toast.success(`⸸ Pago recibido. Total: $${totalCarrito}. Alma condenada con éxito. Servicio programado. ⸸`)
+      toast.success(`⸸ Pago recibido. Total: $${totalCarrito.toLocaleString('es-CO')}. Alma condenada con éxito. Servicio programado. ⸸`)
       setCarrito([])
       setNombreDifunto('')
       setMetodoPago('')
@@ -250,7 +250,7 @@ export default function Funeraria() {
           {SERVICIOS.map((s) => (
             <div key={s.tipo} className="p-4 rounded-xl border-2 border-purple-600 bg-purple-900/20">
               <h3 className="text-red-400 font-bold mb-2">{s.nombre}</h3>
-              <p className="text-white/80 mb-2">$ {s.valor}</p>
+              <p className="text-white/80 mb-2">$ {s.valor.toLocaleString('es-CO')}</p>
               <button
                 onClick={() => agregar(s)}
                 className="rounded-full px-4 py-2 bg-red-900/80 hover:bg-red-800 text-white text-sm font-bold"
@@ -273,12 +273,12 @@ export default function Funeraria() {
         </div>
 
         <div className="mb-6">
-          <p className="text-white/90">Total: $<span className="text-red-400 font-bold">{totalCarrito}</span></p>
+          <p className="text-white/90">Total: $<span className="text-red-400 font-bold">{totalCarrito.toLocaleString('es-CO')}</span></p>
           {carrito.length > 0 && (
             <ul className="text-sm text-gray-400 mt-2">
               {carrito.map((c, i) => (
                 <li key={i}>
-                  {c.nombre} x{c.cantidad} - {c.fecha} {c.hora} - ${c.valor * c.cantidad}
+                  {c.nombre} x{c.cantidad} - {c.fecha} {c.hora} - ${(c.valor * c.cantidad).toLocaleString('es-CO')}
                   <button onClick={() => quitar(i)} className="ml-2 text-red-400 hover:underline">Quitar</button>
                 </li>
               ))}

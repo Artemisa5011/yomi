@@ -75,9 +75,9 @@ export default function Inicio() {
                 Cada servicio existe para dar forma a un destino que ya fue elegido en silencio 🔮 .
               </p>
               <ul className="text-white/90 space-y-2 mb-6">
-                <li><span className="text-red-400 font-bold ">Rituales</span> ($1.000) — Invocación, liberación espiritual y pactos sellados con fuego carmesí.</li>
-                <li><span className="text-red-400 font-bold">Ofrendas</span> ($5.000) — Sangre, pétalos malditos, monedas del inframundo y reliquias de almas perdidas.</li>
-                <li><span className="text-red-400 font-bold">Sombras</span> ($10.000) — Guías espectrales, vigilantes nocturnos y protectores de tumbas antiguas.</li>
+                <li><span className="text-red-400 font-bold ">Rituales</span> ($100.000) — Invocación, liberación espiritual y pactos sellados con fuego carmesí.</li>
+                <li><span className="text-red-400 font-bold">Ofrendas</span> ($500.000) — Sangre, pétalos malditos, monedas del inframundo y reliquias de almas perdidas.</li>
+                <li><span className="text-red-400 font-bold">Sombras</span> ($1.000.000) — Guías espectrales, vigilantes nocturnos y protectores de tumbas antiguas.</li>
               </ul>
               <p className="text-gray-400 text-sm mb-4">Máximo 3 servicios por cliente por día. Horarios: 00:00 o 03:00.</p>
               <div className="flex gap-3">

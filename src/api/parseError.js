@@ -8,5 +8,7 @@ export function parseError(error, customMessages = {}) {
     ...customMessages
   }
   const msg = map[error?.code] || error?.message || 'Error al procesar la solicitud'
-  return new Error(msg)
+  const err = new Error(msg)
+  if (error?.code) err.code = error.code
+  return err
 }

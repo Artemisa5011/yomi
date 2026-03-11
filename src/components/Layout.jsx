@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/useAuth' /* importacion de useAuth */
 import Logo from './Logo'
 /* funcion para retornar el layout */
 export default function Layout({ children, title = 'YOMI NO HANA' }) {
-  const { user, signOut, isAdmin, isVendedor, isCliente } = useAuth()
+  const { user, signOut, isAdmin, isVendedor, isCliente, nombreCompleto } = useAuth()
   const navigate = useNavigate()
   /* funcion para manejar el logout */
   const handleLogout = async () => {
@@ -40,9 +40,16 @@ export default function Layout({ children, title = 'YOMI NO HANA' }) {
                 {isAdmin && (
                   <Link to="/admin" className="text-white hover:text-red-400 transition-colors">ADMIN</Link>
                 )}
-                <button onClick={handleLogout} className="text-red-400 hover:text-red-300 font-bold">
-                  CERRAR SESIÓN
-                </button>
+                <div className="flex flex-col items-end">
+                  <button onClick={handleLogout} className="text-red-400 hover:text-red-300 font-bold">
+                    CERRAR SESIÓN
+                  </button>
+                  {nombreCompleto && (
+                    <span className="text-xs text-gray-400 mt-1 font-light tracking-wide">
+                      {nombreCompleto}
+                    </span>
+                  )}
+                </div>
               </>
             ) : (
               <>

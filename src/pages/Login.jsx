@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/useAuth'
 import { supabase } from '../lib/supabase'
@@ -7,6 +7,13 @@ import toast from 'react-hot-toast'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  useEffect(() => {
+    const reason = sessionStorage.getItem('logout_reason')
+    if (reason === 'cuenta_desactivada') {
+      sessionStorage.removeItem('logout_reason')
+      toast.error('Tu cuenta ha sido desactivada. Contacta al administrador.')
+    }
+  }, [])
   const [loading, setLoading] = useState(false)
   const { signIn } = useAuth()
   const navigate = useNavigate()
@@ -22,9 +29,19 @@ export default function Login() {
     setLoading(true)
     try {
       const { data: authData } = await signIn(email, password)
-      toast.success('⸸ Bienvenido al templo ⸸')
       const { data: profile } = await supabase.from('user_profiles').select('rol').eq('user_id', authData?.user?.id).single()
       const rol = profile?.rol ?? 2
+      /* Vendedor inactivo: bloquear acceso */
+      if (rol === 2) {
+        const { data: emp } = await supabase.from('empleados').select('estado').eq('user_id', authData?.user?.id).single()
+        if (emp?.estado === 'inactivo') {
+          await supabase.auth.signOut()
+          toast.error('Tu cuenta ha sido desactivada. Contacta al administrador.')
+          setLoading(false)
+          return
+        }
+      }
+      toast.success('⸸ Bienvenido al templo ⸸')
       const destino = from || (rol === 3 ? '/mi-cementerio' : '/dashboard')
       navigate(destino, { replace: true })
     } catch (err) {
