@@ -13,6 +13,7 @@ CREATE TABLE empleados (
   nombre_completo VARCHAR(255) NOT NULL,
   telefono VARCHAR(50),
   correo VARCHAR(255),
+  estado VARCHAR(20) DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -69,7 +70,7 @@ INSERT INTO lotes (codigo, nombre, capacidad_total, valor) VALUES
 
 CREATE TABLE servicios_funerarios (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  cliente_id UUID NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+  cliente_id UUID NOT NULL REFERENCES clientes(id) ON DELETE RESTRICT,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('ritual', 'ofrenda', 'sombra')),
   nombre_difunto VARCHAR(255),
@@ -115,7 +116,7 @@ CREATE TRIGGER trg_max_servicios_por_dia
 
 CREATE TABLE reservas_cementerio (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  cliente_id UUID NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+  cliente_id UUID NOT NULL REFERENCES clientes(id) ON DELETE RESTRICT,
   lote_id UUID NOT NULL REFERENCES lotes(id) ON DELETE RESTRICT,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   estado VARCHAR(30) DEFAULT 'asignado' CHECK (estado IN ('asignado', 'reservado_sin_difunto', 'reservado_con_difunto', 'ocupado')),
