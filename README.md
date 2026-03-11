@@ -91,15 +91,22 @@ ON CONFLICT (user_id) DO UPDATE SET rol = 666;
 
 ### Paso 5b (opcional): Eliminar vendedor por completo
 
-Para que el botón **Eliminar** borre la cuenta auth del vendedor (correo liberado para usarse luego como cliente), ejecuta desde la **raíz del proyecto** (misma carpeta donde está `package.json`):
+Para que el botón **Eliminar** borre la cuenta auth del vendedor (correo liberado para usarse luego como cliente):
 
 ```bash
-npm i -g supabase
-supabase link
-supabase functions deploy delete-vendedor-auth
+npm install
+npm run supabase:login
+npm run supabase:link
+npm run supabase:deploy
 ```
 
-La función usa `SUPABASE_SERVICE_ROLE_KEY` (se configura automáticamente en Supabase).
+(O usa `npx supabase` en lugar de los scripts si ya tienes la CLI instalada con Scoop.)
+
+- La función usa `SUPABASE_SERVICE_ROLE_KEY` (se configura automáticamente en Supabase).
+- El deploy incluye `--no-verify-jwt` para evitar 401 del gateway (la función valida auth internamente).
+- **Verificar eliminación:** Supabase → Authentication → Users y Table Editor → `empleados`, `user_profiles`.
+
+Ver `docs/EDGE_FUNCTION_DELETE_VENDEDOR.md` para guía completa, troubleshooting y mensajes de error.
 
 Si no despliegas la función, el botón **Eliminar** no funcionará; usa **Desactivar** para vendedores.
 
@@ -139,6 +146,9 @@ Abre `http://localhost:5173` en el navegador.
 | `npm run dev` | Desarrollo (puerto 5173) |
 | `npm run build` | Build de producción |
 | `npm run preview` | Vista previa del build |
+| `npm run supabase:login` | Login CLI Supabase (una vez) |
+| `npm run supabase:link` | Vincular proyecto Supabase (una vez) |
+| `npm run supabase:deploy` | Desplegar Edge Function delete-vendedor-auth |
 
 ---
 
@@ -327,6 +337,8 @@ git push -u origin main
 | **Vendedor inactivo** | Admin desactiva; no puede ingresar; ventas se conservan |
 | **Montos** | Formato legible ($100.000) con toLocaleString es-CO |
 | **Scripts db/** | 014-019 base. 020-028: migraciones y correcciones. Ver `docs/MIGRACIONES_DB.md` |
+| **Edge Function delete-vendedor** | Elimina cuenta auth (correo liberado). Deploy con `--no-verify-jwt`. Ver `docs/EDGE_FUNCTION_DELETE_VENDEDOR.md` |
+| **Optimistic update** | Eliminar cliente, vendedor; Editar cliente/vendedor; Desactivar/Reactivar vendedor. Rollback + toast en error |
 
 ---
 
@@ -334,9 +346,14 @@ git push -u origin main
 
 ```
 yomi-no-hana/
-├── db/          # SQL: tablas, RLS, triggers, realtime (orden en docs/MIGRACIONES_DB.md)
-├── docs/        # Checklist, guía exposición, validación derroteros, migraciones
-└── src/         # React, páginas, contextos, componentes
+├── db/              # SQL: tablas, RLS, triggers, realtime (orden en docs/MIGRACIONES_DB.md)
+├── docs/            # Guías, checklists, migraciones
+│   ├── EDGE_FUNCTION_DELETE_VENDEDOR.md  # Edge Function eliminar vendedor, verificación, troubleshooting
+│   ├── MIGRACIONES_DB.md                 # Orden de scripts SQL
+│   └── ...
+├── supabase/functions/
+│   └── delete-vendedor-auth/   # Edge Function para eliminar cuenta auth
+└── src/              # React, páginas, contextos, componentes
 ```
 
 **Rutas y menú** (`App.jsx`, protección con `RoleRoute`):
@@ -363,3 +380,9 @@ yomi-no-hana/
 | `026_crear_empleado_faltante.sql` | Crear empleado para UN vendedor (reemplazar placeholders) |
 | `027_crear_empleados_para_vendedores_existentes.sql` | Crear empleados para TODOS los vendedores (rol 2) sin fila |
 | `028_actualizar_empleados_desde_metadata.sql` | Actualizar empleados con datos reales desde metadata |
+
+**Documentación adicional:**
+
+| Documento | Descripción |
+|-----------|-------------|
+| `docs/EDGE_FUNCTION_DELETE_VENDEDOR.md` | Edge Function eliminar vendedor, deploy, verificación en Supabase, troubleshooting |
