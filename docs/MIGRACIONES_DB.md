@@ -35,13 +35,22 @@ Orden de ejecución en Supabase SQL Editor. Ejecutar en el orden indicado.
 | 22 | `023_crear_empleado_admin_rpc.sql` | RPC: admin crea empleado al registrar vendedor |
 | 23 | `024_empleados_estado_inactivo.sql` | Columna estado (activo/inactivo) en empleados |
 
-## Script de diagnóstico (no migración)
+## Scripts de diagnóstico y corrección (no migraciones)
 
 | Archivo | Uso |
 |---------|-----|
 | `018_diagnostico_vinculacion.sql` | Consultas para revisar servicios sin vincular |
+| `025_fix_admin_rol_666.sql` | Corregir rol admin si aparece "Cuenta desactivada" |
+| `026_crear_empleado_faltante.sql` | Crear empleado para UN vendedor específico (reemplazar placeholders) |
+| `027_crear_empleados_para_vendedores_existentes.sql` | Crear empleados para vendedores (rol 2) sin fila en `empleados` |
+| `028_actualizar_empleados_desde_metadata.sql` | Actualizar empleados con datos reales desde `raw_user_meta_data` |
 
 ## Notas
 
 - **022**: Solo ejecutar si un usuario tiene cuenta en auth pero no aparece en `empleados` (diagnóstico y corrección).
 - Los scripts 020–024 son independientes y pueden ejecutarse en cualquier orden después del 019.
+- **025–028**: Scripts de corrección puntual. Solo ejecutar si hace falta.
+
+## Ver también
+
+- **Edge Function delete-vendedor-auth**: Para eliminar vendedores por completo (cuenta auth + empleado + user_profile), ver `EDGE_FUNCTION_DELETE_VENDEDOR.md`.
