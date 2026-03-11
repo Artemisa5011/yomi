@@ -3,211 +3,284 @@
 Aplicación web para gestión de servicios fúnebres y cementerio. React + Vite + Tailwind + Supabase.  
 **SPA** – Single Page Application: cambia entre vistas sin recargar, actualizando la URL dinámicamente.
 
+---
+
 ## Requisitos
 
 - Node.js 18+
 - Cuenta Supabase
 
-## Setup
+---
 
-1. **Clonar e instalar dependencias**
-   ```bash
-   cd yomi-no-hana
-   npm install
-   npm install tailwindcss @tailwindcss/vite
-   ```
+## Setup paso a paso
 
-2. **Configurar variables de entorno**
-   - Copia `.env.example` a `.env` (o `.env.local`)
-   - Crea un proyecto en [Supabase](https://supabase.com)
-   - En Supabase: Settings → API → copia `Project URL` y `anon public` key
-   - En `.env` (sin comillas en los valores):
-     ```
-     VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-     VITE_SUPABASE_ANON_KEY=tu_anon_key
-     ```
+### Paso 1: Clonar e instalar dependencias
 
-3. **Crear la base de datos**
-   - En Supabase: SQL Editor
-   - Ejecuta en orden los archivos de `db/`:
-     - `001_schema.sql`
-     - `002_rls.sql`
-     - `003_realtime.sql`
-     - `004_reglas_negocio.sql`
-     - `005_hora_24h.sql` (si ya tenías datos y quieres pasar a formato 24h)
-     - `006_valor_total.sql`
-     - `007_roles_portal.sql` (roles 666/2/3, portal cliente, RLS extendida)
-     - `008_test_sombra.sql` (resultado espiritual y bloqueo de lote)
-     - `009_fix_role_trigger.sql` (solo si ya ejecutaste 007 antes y al asignar admin sale "No puedes cambiar tu rol")
-     - `010_fix_stack_depth_rls.sql` (corrige "stack depth limit exceeded" al confirmar pago)
-     - `011_calendario_vendedores_ver_todos.sql` (vendedores y admins ven el calendario completo)
-     - `012_get_portal_user_id.sql` (RPC para vincular reservas con clientes del portal)
-     - `013_update_lotes_valores.sql` (actualizar valores de lotes si ya tienes datos)
-     - `014_servicios_cliente_user_id.sql` (columna y RLS para que cliente portal vea sus servicios)
-     - `015_cedula_ya_registrada.sql` (RPC para validar cédula duplicada en registro)
-     - `016_vinculacion_cliente_portal.sql` (vincula reservas y servicios existentes a usuarios portal)
-     - `017_admin_vinculacion_cedula.sql` (RPC para admin vincular manualmente por cédula)
-     - `019_fix_trigger_vinculacion.sql` (evita que el trigger de 3 servicios/día bloquee la vinculación)
+```bash
+cd yomi-no-hana
+npm install
+npm install tailwindcss @tailwindcss/vite
+```
 
-4. **Configurar Auth en Supabase**
-   - Authentication → Providers: Email habilitado
-   - URLs de redirección: `http://localhost:5173` (y tu URL de producción)
-   - Contraseña: Supabase puede exigir mayúscula, minúscula, número y símbolo (mín. 6 caracteres)
+### Paso 2: Configurar variables de entorno
 
-5. **Crear el primer admin (rol 666)**
+1. Copia `.env.example` a `.env` (o `.env.local`)
+2. Crea un proyecto en [Supabase](https://supabase.com)
+3. En Supabase: **Settings** → **API** → copia `Project URL` y `anon public` key
+4. En `.env` (sin comillas en los valores):
 
-   - En Supabase, crea un usuario (Authentication → Users) con el correo que usarás como admin y asigna una contraseña (ej. `contactoinfernal@yominohana.com`).
-   - En SQL Editor, ejecuta:
+```
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_anon_key
+```
 
-   ```sql
-   INSERT INTO public.user_profiles (user_id, rol)
-   SELECT id, 666
-   FROM auth.users
-   WHERE email = 'contactoinfernal@yominohana.com'
-   ON CONFLICT (user_id) DO UPDATE SET rol = 666;
-   ```
+### Paso 3: Crear la base de datos
 
-   - A partir de ahí, ese usuario verá el panel completo (admin + Dashboard) y podrá crear vendedores.
+En Supabase: **SQL Editor** → ejecuta en orden los archivos de `db/`:
 
-   **Si sale "No puedes cambiar tu rol"** (porque ejecutaste `007_roles_portal.sql` antes de tener esta corrección): en SQL Editor ejecuta primero el archivo `db/009_fix_role_trigger.sql` y luego vuelve a ejecutar el `INSERT` de arriba.
+| Orden | Archivo | Descripción |
+|-------|---------|-------------|
+| 1 | `001_schema.sql` | Tablas base |
+| 2 | `002_rls.sql` | Políticas RLS |
+| 3 | `003_realtime.sql` | Suscripción Realtime |
+| 4 | `004_reglas_negocio.sql` | Reglas de negocio |
+| 5 | `005_hora_24h.sql` | Formato hora 24h (opcional si ya tienes datos) |
+| 6 | `006_valor_total.sql` | Campo valor_total |
+| 7 | `007_roles_portal.sql` | Roles 666/2/3, portal cliente |
+| 8 | `008_test_sombra.sql` | Test de la Sombra, resultado espiritual |
+| 9 | `009_fix_role_trigger.sql` | Solo si al asignar admin sale "No puedes cambiar tu rol" |
+| 10 | `010_fix_stack_depth_rls.sql` | Corrige "stack depth limit exceeded" |
+| 11 | `011_calendario_vendedores_ver_todos.sql` | Calendario completo para vendedores |
+| 12 | `012_get_portal_user_id.sql` | RPC vincular reservas con clientes portal |
+| 13 | `013_update_lotes_valores.sql` | Actualizar valores lotes (opcional) |
+| 14 | `014_servicios_cliente_user_id.sql` | Cliente portal ve sus servicios |
+| 15 | `015_cedula_ya_registrada.sql` | RPC validar cédula duplicada |
+| 16 | `016_vinculacion_cliente_portal.sql` | Vinculación masiva existente |
+| 17 | `017_admin_vinculacion_cedula.sql` | RPC admin vincular por cédula |
+| 18 | `019_fix_trigger_vinculacion.sql` | Fix trigger 3 servicios/día |
+| 19 | `020_restrict_delete_cliente_con_servicios.sql` | No eliminar cliente con servicios |
+| 20 | `021_get_display_name.sql` | Nombre en header tras login |
+| 21 | `023_crear_empleado_admin_rpc.sql` | RPC guardar empleado al registrar vendedor |
+| 22 | `024_empleados_estado_inactivo.sql` | Estado activo/inactivo vendedores |
+
+> Ver `docs/MIGRACIONES_DB.md` para el orden completo y descripciones.
+
+### Paso 4: Configurar Auth en Supabase
+
+1. **Authentication** → **Providers**: Email habilitado
+2. **URLs de redirección**: `http://localhost:5173` (y tu URL de producción)
+3. Contraseña: Supabase puede exigir mayúscula, minúscula, número y símbolo (mín. 6 caracteres)
+
+### Paso 5: Crear el primer admin (rol 666)
+
+1. En Supabase: **Authentication** → **Users** → Add user
+2. Crea un usuario con el correo que usarás como admin (ej. `contactoinfernal@yominohana.com`) y asigna contraseña
+3. En **SQL Editor**, ejecuta:
+
+```sql
+INSERT INTO public.user_profiles (user_id, rol)
+SELECT id, 666
+FROM auth.users
+WHERE email = 'contactoinfernal@yominohana.com'
+ON CONFLICT (user_id) DO UPDATE SET rol = 666;
+```
+
+4. Ese usuario verá el panel completo (Admin + Dashboard) y podrá crear vendedores
+
+**Si sale "No puedes cambiar tu rol"**: ejecuta primero `db/009_fix_role_trigger.sql` y luego el `INSERT` de arriba.
+
+### Paso 6: Ejecutar la aplicación
+
+```bash
+npm run dev
+```
+
+Abre `http://localhost:5173` en el navegador.
+
+---
 
 ## Scripts
 
-- `npm run dev` – Desarrollo (puerto 5173)
-- `npm run build` – Build de producción
-- `npm run preview` – Vista previa del build
+| Comando | Descripción |
+|---------|-------------|
+| `npm run dev` | Desarrollo (puerto 5173) |
+| `npm run build` | Build de producción |
+| `npm run preview` | Vista previa del build |
 
-## Prueba manual (smoke test)
+---
 
-1. **Registro y login (admin y vendedor)**
-   - Como admin (correo al que diste rol 666), entra a `/login` e inicia sesión.
-   - En el menú verás **ADMIN** (lleva a `/admin`, panel con enlaces a Registrar vendedor y Dashboard). Ve a **Registrar vendedor** (`/registro`) y crea un vendedor: cédula, nombre, teléfono, correo, contraseña.
-   - Cierra sesión, inicia sesión con el vendedor y comprueba que ve Dashboard, Funeraria y Cementerio.
+## Prueba manual (smoke test) paso a paso
 
-2. **Ruta protegida y página inicial**
-   - Cerrar sesión
-   - Intentar acceder a `/dashboard` → redirige a **Inicio** (/) en lugar de Login
-   - La app siempre abre en Inicio; el login es opcional desde el menú
+### 1. Registro y login (admin y vendedor)
 
-3. **CRUD Clientes**
-   - Login → Dashboard
-   - Buscar cédula inexistente → registrar cliente
-   - Crear cliente con cédula, nombre, teléfono, correo, departamento, ciudad
-   - Buscar cliente por cédula
-   - **Ver detalle** del cliente: datos, servicios funerarios y reservas cementerio (`/clientes/detalle/:id`)
-   - Editar cliente (solo teléfono, correo, departamento, ciudad)
+- [ ] Ir a `/login` e iniciar sesión como admin (correo con rol 666)
+- [ ] Ver en el menú **ADMIN** → ir a `/admin`
+- [ ] Click en **Registrar vendedor** (`/registro`)
+- [ ] Crear vendedor: cédula, nombre, teléfono, correo, contraseña
+- [ ] Cerrar sesión e iniciar con el vendedor
+- [ ] Verificar: Dashboard, Funeraria, Cementerio visibles
+- [ ] Verificar: nombre del usuario visible en header (debajo de Cerrar sesión)
 
-4. **Funeraria**
-   - Buscar cliente activo
-   - Agregar servicios: Rituales (1000), Ofrendas (5000), Sombras (10000)
-   - Máximo 3 por día
-   - Seleccionar fecha, hora (00:00 o 03:00), nombre del difunto
-   - Método de pago: efectivo, tarjeta, con la vida (nombre condenado)
-   - Confirmar pago → mensaje "Pago recibido. Alma condenada con éxito"
-   - Si el cliente tiene cuenta en el portal (misma cédula), se vincula automáticamente
-   - Ver calendario con servicios confirmados (Realtime)
+### 2. Ruta protegida
 
-5. **Cementerio + Test de la Sombra**
-   - Buscar cliente
-   - Responder pregunta de pecado → asignar lote
-   - (Opcional) Cambio manual de lote (+$1.000.000)
-   - Elegir “Con difunto” o “Sin difunto”
-   - Responder el **Test de la Sombra** (7 preguntas A–G)
-   - Elegir método de pago y confirmar
-   - Ver en la tabla de reservas el `Resultado espiritual` (pecado dominante) y comprobar que el lote ya no se puede cambiar después del juicio.
+- [ ] Cerrar sesión
+- [ ] Intentar acceder a `/dashboard` → debe redirigir a **Inicio** (/)
+- [ ] La app abre siempre en Inicio; login es opcional desde el menú
 
-6. **Portal cliente (rol 3)**
-   - Cierra sesión.
-   - En Login: "Regístrate como cliente" o ir a `/registro-cliente`. Registrar con cédula, correo y contraseña (mín. 6 caracteres: mayúscula, minúscula, número y símbolo).
-   - Las ventas (Funeraria/Cementerio) se vinculan automáticamente si la cédula del cliente coincide.
-   - Cierra sesión e inicia como cliente portal → redirección a `/mi-cementerio` (o desde el menú “MIS DIFUNTOS”).
-   - **Mis Difuntos** muestra servicios funerarios y reservas. Si no ve nada, el admin vincula por cédula en Panel Admin.
+### 3. CRUD Clientes
 
-7. **Panel Admin**
-   - Registrar vendedor, Dashboard.
-   - **Vincular cliente portal**: ingresa la cédula de un cliente que tiene servicios/reservas pero no los ve en "Mis Difuntos". Al vincular, el cliente podrá verlos al recargar.
+- [ ] Login → Dashboard
+- [ ] Buscar cédula inexistente → registrar cliente
+- [ ] Crear cliente: cédula, nombre, teléfono, correo, departamento, ciudad
+- [ ] Buscar cliente por cédula
+- [ ] **Ver detalle** (`/clientes/detalle/:id`): datos, servicios, reservas
+- [ ] Editar cliente (teléfono, correo, departamento, ciudad)
+- [ ] **Eliminar**: cliente sin servicios se puede eliminar; cliente verdugo (con servicios) → botón deshabilitado
 
-8. **Reglas de negocio**
-   - Intentar registrar cliente con cédula duplicada → error
-   - Intentar más de 3 servicios funerarios por día → error
-   - Cliente pasa a "verdugo" al contratar servicio
+### 4. Funeraria
 
-9. **Optimistic update**
-   - Editar cliente → Guardar
-   - Simular error (desconectar red) → rollback + toast
+- [ ] Buscar cliente activo
+- [ ] Agregar servicios: **Rituales ($100.000)**, **Ofrendas ($500.000)**, **Sombras ($1.000.000)**
+- [ ] Máximo 3 por día
+- [ ] Seleccionar fecha, hora (00:00 o 03:00), nombre del difunto
+- [ ] Método de pago: efectivo, tarjeta, con la vida (nombre condenado)
+- [ ] Confirmar pago → mensaje "Pago recibido. Alma condenada con éxito"
+- [ ] Si el cliente tiene cuenta portal (misma cédula), se vincula automáticamente
+- [ ] Ver calendario con servicios confirmados (Realtime)
+- [ ] Cliente pasa a estado "verdugo" tras comprar
 
-## Despliegue en Netlify
+### 5. Cementerio + Test de la Sombra
 
-1. **Sube el proyecto a GitHub** (si no lo tienes):
-   - Crea un repositorio en GitHub.
-   - En la carpeta del proyecto ejecuta:
-     ```bash
-     git init
-     git add .
-     git commit -m "Initial commit"
-     git branch -M main
-     git remote add origin https://github.com/TU_USUARIO/TU_REPO.git
-     git push -u origin main
-     ```
+- [ ] Buscar cliente
+- [ ] Responder pregunta de pecado → asignar lote
+- [ ] (Opcional) Cambio manual de lote (+$1.000.000)
+- [ ] Elegir "Con difunto" o "Sin difunto"
+- [ ] Responder **Test de la Sombra** (7 preguntas A–G)
+- [ ] Método de pago → confirmar
+- [ ] Ver tabla de reservas con `Resultado espiritual` (pecado dominante)
+- [ ] Verificar: lote no se puede cambiar después del juicio
 
-2. **Entra en Netlify**  
-   - Ve a [netlify.com](https://www.netlify.com) e inicia sesión (puedes usar “Log in with GitHub”).
+### 6. Portal cliente (rol 3)
 
-3. **Nuevo sitio desde Git**  
-   - Click en **Add new site** → **Import an existing project**.  
-   - Conecta **GitHub** y autoriza a Netlify.  
-   - Elige el repositorio donde está `yomi-no-hana` (o el repo que tenga el proyecto).
+- [ ] Cerrar sesión
+- [ ] "Regístrate como cliente" o ir a `/registro-cliente`
+- [ ] Registrar: cédula, correo, contraseña (mín. 6 caracteres: mayúscula, minúscula, número, símbolo)
+- [ ] Las ventas se vinculan automáticamente si la cédula coincide
+- [ ] Iniciar como cliente → redirección a `/mi-cementerio`
+- [ ] **Mis Difuntos**: servicios funerarios y reservas (solo lectura)
+- [ ] Si no ve nada: admin vincula por cédula en Panel Admin
 
-4. **Configuración del build**  
-   - **Branch to deploy**: `main` (o la rama que uses).  
-   - **Base directory**: si el proyecto está en una subcarpeta, escribe `yomi-no-hana`. Si todo el repo es el proyecto, déjalo vacío.  
-   - **Build command**: `npm run build`  
-   - **Publish directory**: `dist`  
-   - **Variables de entorno** (Importante):  
-     - Click en **Add environment variables** / **Add variables** / **Options**.  
-     - Añade:
-       - `VITE_SUPABASE_URL` = `https://tu-proyecto.supabase.co`
-       - `VITE_SUPABASE_ANON_KEY` = tu anon key de Supabase  
+### 7. Panel Admin
 
-5. **Deploy**  
-   - Click en **Deploy site**. Netlify instalará dependencias, ejecutará `npm run build` y publicará la carpeta `dist`.
+- [ ] Registrar vendedor
+- [ ] Dashboard
+- [ ] **Vendedores**: listar, Desactivar/Reactivar. Inactivo no puede ingresar; ventas se conservan
+- [ ] **Vincular cliente portal**: ingresar cédula para vincular servicios/reservas
 
-6. **Supabase: URL de producción**  
-   - En Supabase: **Authentication** → **URL Configuration**.  
-   - En **Site URL** pon la URL de Netlify (ej. `https://tu-sitio.netlify.app`).  
-   - En **Redirect URLs** agrega: `https://tu-sitio.netlify.app/**`  
-   Así el login y el registro funcionarán en producción.
+### 8. Reglas de negocio
 
-**Checklist rápido después del deploy:**
-- [ ] La app carga en la URL de Netlify.
-- [ ] Login y registro funcionan (Supabase Auth con la URL de producción).
-- [ ] Dashboard, Funeraria y Cementerio se ven al estar logueado.
-- [ ] No aparece `service_role` ni ninguna key secreta en el código ni en Netlify (solo `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`).
+- [ ] Registrar cliente con cédula duplicada → error
+- [ ] Más de 3 servicios funerarios por día → error
+- [ ] Cliente pasa a "verdugo" al contratar servicio
+- [ ] No eliminar cliente verdugo → botón deshabilitado
+- [ ] Vendedor inactivo intenta login → mensaje "Cuenta desactivada"
+
+### 9. Optimistic update
+
+- [ ] Editar cliente → Guardar
+- [ ] Simular error (desconectar red) → rollback + toast
+
+---
+
+## Despliegue en Netlify paso a paso
+
+### 1. Subir a GitHub
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/TU_USUARIO/TU_REPO.git
+git push -u origin main
+```
+
+### 2. Crear sitio en Netlify
+
+1. Ir a [netlify.com](https://www.netlify.com) e iniciar sesión
+2. **Add new site** → **Import an existing project**
+3. Conectar **GitHub** y elegir el repositorio
+
+### 3. Configuración del build
+
+- **Branch to deploy**: `main`
+- **Base directory**: vacío (o `yomi-no-hana` si está en subcarpeta)
+- **Build command**: `npm run build`
+- **Publish directory**: `dist`
+
+### 4. Variables de entorno
+
+- `VITE_SUPABASE_URL` = `https://tu-proyecto.supabase.co`
+- `VITE_SUPABASE_ANON_KEY` = tu anon key
+
+### 5. Deploy
+
+- Click en **Deploy site**
+
+### 6. Configurar Supabase para producción
+
+- **Authentication** → **URL Configuration**
+- **Site URL**: URL de Netlify (ej. `https://tu-sitio.netlify.app`)
+- **Redirect URLs**: `https://tu-sitio.netlify.app/**`
+
+**Checklist post-deploy:**
+
+- [ ] App carga en la URL de Netlify
+- [ ] Login y registro funcionan
+- [ ] Dashboard, Funeraria, Cementerio visibles al estar logueado
+- [ ] No hay `service_role` ni keys secretas expuestas
+
+---
 
 ## Resumen de cambios
 
-- **Página inicial**: la app abre en Inicio (`/`). Rutas protegidas sin sesión redirigen a Inicio (no a Login).
-- **Login**: enlace "Regístrate como cliente" además de vendedor. Redirección según rol: cliente → `/mi-cementerio`, vendedor/admin → `/dashboard`.
-- **Registro cliente**: validación de contraseña (mayúscula, minúscula, número, símbolo), verificación de cédula duplicada, mensaje si correo ya tiene cuenta.
-- **Detalle del cliente** (`/clientes/detalle/:id`): Admin/Vendedor ven datos del cliente, sus servicios funerarios y reservas cementerio.
-- **Mis Difuntos**: el cliente portal ve servicios funerarios y reservas (solo lectura). Vinculación automática si la cédula coincide; si no, Admin puede vincular desde el panel.
-- **Panel Admin**: sección "Vincular cliente portal" para vincular manualmente por cédula.
-- **Scripts db/**: 014 (cliente_user_id en servicios), 015 (cedula_ya_registrada), 016 (vinculación masiva), 017 (RPC vinculación admin), 018 (diagnóstico), 019 (fix trigger vinculación).
+| Cambio | Descripción |
+|--------|-------------|
+| **Página inicial** | App abre en Inicio (/). Rutas sin sesión redirigen a Inicio |
+| **Login** | Enlace "Regístrate como cliente". Redirección según rol |
+| **Nombre en header** | Tras login se muestra el nombre del usuario (debajo de Cerrar sesión) |
+| **Registro cliente** | Validación contraseña, cédula duplicada, correo existente |
+| **Detalle cliente** | Datos, servicios funerarios, reservas cementerio |
+| **Mis Difuntos** | Cliente ve servicios y reservas (solo lectura). Vinculación automática o manual |
+| **Panel Admin** | Vendedores (Desactivar/Reactivar), Vincular cliente portal |
+| **Cliente verdugo** | No se puede eliminar (FK RESTRICT, botón deshabilitado) |
+| **Vendedor inactivo** | Admin desactiva; no puede ingresar; ventas se conservan |
+| **Montos** | Formato legible ($100.000) con toLocaleString es-CO |
+| **Scripts db/** | 014-019 base. 020-024 nuevos. Ver `docs/MIGRACIONES_DB.md` |
+
+---
 
 ## Estructura
 
-- `db/` – SQL: tablas, RLS, triggers, realtime
-- `src/` – React, páginas, contextos, componentes
+```
+yomi-no-hana/
+├── db/          # SQL: tablas, RLS, triggers, realtime (orden en docs/MIGRACIONES_DB.md)
+├── docs/        # Checklist, guía exposición, validación derroteros, migraciones
+└── src/         # React, páginas, contextos, componentes
+```
 
-**Rutas y menú:** `App.jsx` define las rutas. Protección con `RoleRoute`:
-- `/` – Inicio (público, página de aterrizaje)
-- `/login` – Iniciar sesión
-- `/registro` – Registrar vendedor (solo admin)
-- `/registro-cliente` – Registrar cliente portal (público)
-- `/dashboard` – Panel vendedor (rol 2, 666)
-- `/admin` – Panel admin con vinculación de clientes (solo 666)
-- `/funeraria`, `/cementerio` – Venta (rol 2, 666)
-- `/mi-cementerio` – Mis Difuntos: servicios y reservas del cliente (rol 3)
-- `/clientes/nuevo`, `/clientes/editar/:id`, `/clientes/detalle/:id` – CRUD y detalle de clientes
+**Rutas y menú** (`App.jsx`, protección con `RoleRoute`):
+
+| Ruta | Acceso | Descripción |
+|------|--------|-------------|
+| `/` | Público | Inicio (página de aterrizaje) |
+| `/login` | Público | Iniciar sesión |
+| `/registro` | Admin (666) | Registrar vendedor |
+| `/registro-cliente` | Público | Registrar cliente portal |
+| `/dashboard` | Vendedor/Admin | Panel vendedor |
+| `/admin` | Admin (666) | Panel admin |
+| `/funeraria`, `/cementerio` | Vendedor/Admin | Venta |
+| `/mi-cementerio` | Cliente (3) | Mis Difuntos |
+| `/clientes/nuevo`, `/editar/:id`, `/detalle/:id` | Vendedor/Admin | CRUD clientes |
 
 **Scripts de diagnóstico:** `018_diagnostico_vinculacion.sql` – consultas para revisar servicios sin vincular y cédulas en portal.
