@@ -34,6 +34,7 @@ Orden de ejecución en Supabase SQL Editor. Ejecutar en el orden indicado.
 | 21 | `022_crear_empleado_desde_auth.sql` | Script diagnóstico: crear empleado para usuario sin registro |
 | 22 | `023_crear_empleado_admin_rpc.sql` | RPC: admin crea empleado al registrar vendedor |
 | 23 | `024_empleados_estado_inactivo.sql` | Columna estado (activo/inactivo) en empleados |
+| 24 | `029_solicitudes_contacto.sql` | Tabla solicitudes de contacto (formulario Inicio), RLS, RPC admin |
 
 ## Scripts de diagnóstico y corrección (no migraciones)
 
