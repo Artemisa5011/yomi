@@ -113,13 +113,9 @@ export default function Login() {
             {loading ? 'Entrando...' : 'ENTRAR'}
           </button>
         </form>
-        <p className="mt-4 text-center text-gray-400 text-sm space-y-2">
+        <p className="mt-4 text-center text-gray-400 text-sm">
           <span className="block">¿No tienes cuenta?</span>
-          <span>
-            <Link to="/registro-cliente" className="text-red-400 hover:underline font-medium">Regístrate como cliente</Link>
-            {' · '}
-            <Link to="/registro" className="text-red-400 hover:underline">Regístrate como vendedor</Link>
-          </span>
+          <Link to="/registro-cliente" className="text-red-400 hover:underline font-medium">Regístrate como cliente</Link>
         </p>
       </div>
     </div>

@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import Seccion from '../components/Seccion'
 import * as adminApi from '../api/adminApi'
 import * as empleadosApi from '../api/empleadosApi'
+import * as solicitudesApi from '../api/solicitudesApi'
 import toast from 'react-hot-toast'
 
 export default function Admin() {
@@ -11,12 +12,15 @@ export default function Admin() {
   const [loading, setLoading] = useState(false)
   const [empleados, setEmpleados] = useState([])
   const [loadingEmpleados, setLoadingEmpleados] = useState(true)
+  const [solicitudes, setSolicitudes] = useState([])
+  const [loadingSolicitudes, setLoadingSolicitudes] = useState(true)
   const [togglingId, setTogglingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [ventasPorEmpleado, setVentasPorEmpleado] = useState({})
 
   useEffect(() => {
     cargarEmpleados()
+    cargarSolicitudes()
   }, [])
 
   const cargarEmpleados = async () => {
@@ -34,6 +38,17 @@ export default function Admin() {
       toast.error(err.message)
     } finally {
       setLoadingEmpleados(false)
+    }
+  }
+
+  const cargarSolicitudes = async () => {
+    try {
+      const data = await solicitudesApi.listarSolicitudesAdmin()
+      setSolicitudes(data)
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setLoadingSolicitudes(false)
     }
   }
 
@@ -174,6 +189,58 @@ export default function Admin() {
                             </button>
                           )}
                         </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Seccion>
+        <Seccion title="📩 Solicitudes de contacto">
+          <p className="text-gray-400 text-sm mb-4">
+            Mensajes enviados desde el formulario de Inicio. Si falta &quot;Cliente&quot;, regístralo para que puedan comprar.
+          </p>
+          {loadingSolicitudes ? (
+            <p className="text-gray-400">Cargando solicitudes...</p>
+          ) : solicitudes.length === 0 ? (
+            <p className="text-gray-400">No hay solicitudes de contacto.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-red-900/50">
+                    <th className="text-left py-2 text-gray-400">Fecha</th>
+                    <th className="text-left py-2 text-gray-400">Nombre</th>
+                    <th className="text-left py-2 text-gray-400">Cédula</th>
+                    <th className="text-left py-2 text-gray-400">Estado</th>
+                    <th className="text-left py-2 text-gray-400">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {solicitudes.map((s) => (
+                    <tr key={s.id} className="border-b border-red-900/30">
+                      <td className="py-2 text-gray-400">
+                        {s.created_at ? new Date(s.created_at).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-'}
+                      </td>
+                      <td className="py-2">{s.nombre}</td>
+                      <td className="py-2">{s.cedula}</td>
+                      <td className="py-2">
+                        <span className="text-green-400">Contacto ✓</span>
+                        {' · '}
+                        {s.existe_cliente ? <span className="text-green-400">Cliente ✓</span> : <span className="text-amber-400">Cliente ✗</span>}
+                        {' · '}
+                        {s.existe_portal ? <span className="text-green-400">Portal ✓</span> : <span className="text-gray-500">Portal ✗</span>}
+                      </td>
+                      <td className="py-2">
+                        {!s.existe_cliente && (
+                          <Link
+                            to={`/clientes/nuevo?cedula=${encodeURIComponent(s.cedula)}&nombre=${encodeURIComponent(s.nombre || '')}&telefono=${encodeURIComponent(s.telefono || '')}&correo=${encodeURIComponent(s.correo || '')}`}
+                            className="text-sm rounded px-3 py-1 bg-red-900/50 text-red-400 hover:bg-red-900/70"
+                          >
+                            Registrar como cliente
+                          </Link>
+                        )}
                       </td>
                     </tr>
                   ))}

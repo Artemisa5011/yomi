@@ -9,21 +9,16 @@ import toast from 'react-hot-toast'
 export default function ClienteNuevo() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
-  const cedulaParam = searchParams.get('cedula') || ''
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    cedula: cedulaParam,
-    nombre_completo: '',
-    telefono: '',
-    correo: '',
+    cedula: searchParams.get('cedula') || '',
+    nombre_completo: searchParams.get('nombre') || '',
+    telefono: searchParams.get('telefono') || '',
+    correo: searchParams.get('correo') || '',
     departamento: '',
     ciudad: ''
   })
-  const [loading, setLoading] = useState(false) /* F. Retornar el estado de carga */
-  /* F. Cargar el cliente */
-  useEffect(() => {
-    if (cedulaParam) setForm((f) => ({ ...f, cedula: cedulaParam }))
-  }, [cedulaParam])
+  const [loading, setLoading] = useState(false)
   /* F. Manejar el cambio de formulario */
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
   /* F. Manejar el submit del formulario */

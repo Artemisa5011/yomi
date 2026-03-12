@@ -1,24 +1,35 @@
-import { useState } from 'react' /* importacion de useState */
-import { useNavigate } from 'react-router-dom' /* importacion de useNavigate */
-import Layout from '../components/Layout' /* importacion de Layout */
-import Seccion from '../components/Seccion' /* importacion de Seccion */
-import toast from 'react-hot-toast' /* importacion de toast */
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import Layout from '../components/Layout'
+import Seccion from '../components/Seccion'
+import { useAuth } from '../contexts/useAuth'
+import * as solicitudesApi from '../api/solicitudesApi'
+import toast from 'react-hot-toast'
 
 export default function Inicio() {
-  const [form, setForm] = useState({ nombre: '', correo: '', mensaje: '' })
-  const [modalServicio, setModalServicio] = useState(null) // 'funeraria' | 'cementerio' | null
+  const [form, setForm] = useState({ nombre: '', cedula: '', telefono: '', correo: '', mensaje: '' })
+  const [enviando, setEnviando] = useState(false)
+  const [modalServicio, setModalServicio] = useState(null)
   const navigate = useNavigate()
-  /* Enviar formulario de contacto */
-  const handleSubmit = (e) => {
+  const { user, isVendedor, isCliente } = useAuth()
+  const puedeVender = isVendedor
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.nombre?.trim() || !form.correo?.trim() || !form.mensaje?.trim()) {
-      toast.error('⛧ Completa todos los campos')
+    if (!form.nombre?.trim() || !form.cedula?.trim() || !form.correo?.trim() || !form.mensaje?.trim()) {
+      toast.error('⛧ Completa nombre, cédula, correo y mensaje')
       return
     }
-    /* Mostrar mensaje de éxito */
-    toast.success('⸸ Mensaje enviado a las sombras... Te contactaremos pronto ⸸')
-    setForm({ nombre: '', correo: '', mensaje: '' })
-    /* F. Resetear el formulario de contacto */
+    setEnviando(true)
+    try {
+      await solicitudesApi.insertarSolicitud(form)
+      toast.success('⸸ Mensaje enviado a las sombras... Te contactaremos pronto ⸸')
+      setForm({ nombre: '', cedula: '', telefono: '', correo: '', mensaje: '' })
+    } catch (err) {
+      toast.error(err.message || 'Error al enviar. Intenta de nuevo.')
+    } finally {
+      setEnviando(false)
+    }
   }
   /* Retornar el layout de la pagina de inicio */
   return (
@@ -80,13 +91,41 @@ export default function Inicio() {
                 <li><span className="text-red-400 font-bold">Sombras</span> ($1.000.000) — Guías espectrales, vigilantes nocturnos y protectores de tumbas antiguas.</li>
               </ul>
               <p className="text-gray-400 text-sm mb-4">Máximo 3 servicios por cliente por día. Horarios: 00:00 o 03:00.</p>
-              <div className="flex gap-3">
-                <button onClick={() => navigate('/funeraria')} className="flex-1 rounded-full py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold">
-                  IR A FUNERARIA
-                </button>
-                <button onClick={() => setModalServicio(null)} className="rounded-full py-2 px-6 border border-red-600 text-red-400 hover:bg-red-900/30">
-                  Cerrar
-                </button>
+              <div className="flex flex-col gap-3">
+                {puedeVender ? (
+                  <div className="flex gap-3">
+                    <button onClick={() => navigate('/funeraria')} className="flex-1 rounded-full py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold">
+                      IR A FUNERARIA
+                    </button>
+                    <button onClick={() => setModalServicio(null)} className="rounded-full py-2 px-6 border border-red-600 text-red-400 hover:bg-red-900/30">
+                      Cerrar
+                    </button>
+                  </div>
+                ) : isCliente ? (
+                  <div className="space-y-3">
+                    <p className="text-amber-200/90 text-center text-sm">Los clientes no realizan ventas. Ve a <strong>Mis Difuntos</strong> para ver tus servicios y reservas.</p>
+                    <div className="flex gap-3">
+                      <Link to="/mi-cementerio" onClick={() => setModalServicio(null)} className="flex-1 rounded-full py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold text-center">
+                        IR A MIS DIFUNTOS
+                      </Link>
+                      <button onClick={() => setModalServicio(null)} className="rounded-full py-2 px-6 border border-red-600 text-red-400 hover:bg-red-900/30">
+                        Cerrar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-amber-200/90 text-center text-sm">Inicia sesión como vendedor o admin para acceder a Funeraria y Cementerio.</p>
+                    <div className="flex gap-3">
+                      <Link to="/login" onClick={() => setModalServicio(null)} className="flex-1 rounded-full py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold text-center">
+                        INICIAR SESIÓN
+                      </Link>
+                      <button onClick={() => setModalServicio(null)} className="rounded-full py-2 px-6 border border-red-600 text-red-400 hover:bg-red-900/30">
+                        Cerrar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -106,13 +145,41 @@ export default function Inicio() {
                 <li>• <span className="text-red-400">ALMAS INOCENTES</span></li>
               </ul>
               <p className="text-gray-400 text-sm mb-4 text-center">Responde unas preguntas y el sistema te asignará el lote. Puedes cambiarlo manualmente (costo adicional).</p>
-              <div className="flex gap-3">
-                <button onClick={() => navigate('/cementerio')} className="flex-1 rounded-full py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold">
-                  IR A CEMENTERIO
-                </button>
-                <button onClick={() => setModalServicio(null)} className="rounded-full py-2 px-6 border border-red-600 text-red-400 hover:bg-red-900/30">
-                  Cerrar
-                </button>
+              <div className="flex flex-col gap-3">
+                {puedeVender ? (
+                  <div className="flex gap-3">
+                    <button onClick={() => navigate('/cementerio')} className="flex-1 rounded-full py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold">
+                      IR A CEMENTERIO
+                    </button>
+                    <button onClick={() => setModalServicio(null)} className="rounded-full py-2 px-6 border border-red-600 text-red-400 hover:bg-red-900/30">
+                      Cerrar
+                    </button>
+                  </div>
+                ) : isCliente ? (
+                  <div className="space-y-3">
+                    <p className="text-amber-200/90 text-center text-sm">Los clientes no realizan ventas. Ve a <strong>Mis Difuntos</strong> para ver tus servicios y reservas.</p>
+                    <div className="flex gap-3">
+                      <Link to="/mi-cementerio" onClick={() => setModalServicio(null)} className="flex-1 rounded-full py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold text-center">
+                        IR A MIS DIFUNTOS
+                      </Link>
+                      <button onClick={() => setModalServicio(null)} className="rounded-full py-2 px-6 border border-red-600 text-red-400 hover:bg-red-900/30">
+                        Cerrar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-amber-200/90 text-center text-sm">Inicia sesión como vendedor o admin para acceder a Funeraria y Cementerio.</p>
+                    <div className="flex gap-3">
+                      <Link to="/login" onClick={() => setModalServicio(null)} className="flex-1 rounded-full py-2 bg-red-900/80 hover:bg-red-800 text-white font-bold text-center">
+                        INICIAR SESIÓN
+                      </Link>
+                      <button onClick={() => setModalServicio(null)} className="rounded-full py-2 px-6 border border-red-600 text-red-400 hover:bg-red-900/30">
+                        Cerrar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -130,6 +197,7 @@ export default function Inicio() {
           <form onSubmit={handleSubmit} className="max-w-md mx-auto flex flex-col gap-4 text-left">
             <input
               type="text"
+              name="nombre"
               placeholder="Tu nombre"
               value={form.nombre}
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
@@ -137,7 +205,25 @@ export default function Inicio() {
               required
             />
             <input
+              type="text"
+              name="cedula"
+              placeholder="Tu cédula"
+              value={form.cedula}
+              onChange={(e) => setForm({ ...form, cedula: e.target.value })}
+              className="w-full bg-[#1a1a1a] border border-red-900/50 rounded-lg px-4 py-3 text-white placeholder-gray-500"
+              required
+            />
+            <input
+              type="text"
+              name="telefono"
+              placeholder="Tu teléfono"
+              value={form.telefono}
+              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+              className="w-full bg-[#1a1a1a] border border-red-900/50 rounded-lg px-4 py-3 text-white placeholder-gray-500"
+            />
+            <input
               type="email"
+              name="correo"
               placeholder="Tu correo"
               value={form.correo}
               onChange={(e) => setForm({ ...form, correo: e.target.value })}
@@ -145,6 +231,7 @@ export default function Inicio() {
               required
             />
             <textarea
+              name="mensaje"
               placeholder="Escribe tu petición..."
               value={form.mensaje}
               onChange={(e) => setForm({ ...form, mensaje: e.target.value })}
@@ -154,9 +241,10 @@ export default function Inicio() {
             />
             <button
               type="submit"
-              className="rounded-full px-8 py-3 bg-red-900/80 hover:bg-red-800 text-white font-bold border border-red-600"
+              disabled={enviando}
+              className="rounded-full px-8 py-3 bg-red-900/80 hover:bg-red-800 text-white font-bold border border-red-600 disabled:opacity-50"
             >
-              ENVIAR
+              {enviando ? 'Enviando...' : 'ENVIAR'}
             </button>
           </form>
         </Seccion>

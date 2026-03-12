@@ -9,6 +9,7 @@ export default function EmpleadoEditar() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [form, setForm] = useState({ cedula: '', nombre_completo: '', telefono: '', correo: '' })
+  const [original, setOriginal] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -18,12 +19,14 @@ export default function EmpleadoEditar() {
     const cargar = async () => {
       try {
         const data = await empleadosApi.getEmpleadoById(id)
-        setForm({
+        const initial = {
           cedula: data.cedula || '',
           nombre_completo: data.nombre_completo || '',
           telefono: data.telefono || '',
           correo: data.correo || ''
-        })
+        }
+        setForm(initial)
+        setOriginal(initial)
       } catch (err) {
         toast.error(err.message)
         navigate('/admin')
@@ -40,7 +43,6 @@ export default function EmpleadoEditar() {
       toast.error('Cédula y nombre son obligatorios')
       return
     }
-    const backup = { ...form }
     setSaving(true)
     toast.loading('Guardando...', { id: 'guardar' })
     try {
@@ -53,7 +55,7 @@ export default function EmpleadoEditar() {
       toast.success('Vendedor actualizado', { id: 'guardar' })
       navigate('/admin')
     } catch {
-      setForm(backup)
+      if (original) setForm({ ...original })
       toast.error('Error al guardar. Cambios revertidos.', { id: 'guardar' })
     } finally {
       setSaving(false)

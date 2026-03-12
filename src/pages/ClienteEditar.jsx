@@ -9,9 +9,10 @@ import toast from 'react-hot-toast'
 export default function ClienteEditar() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ telefono: '', correo: '', departamento: '', ciudad: '' }) /* funcion para retornar el formulario de cliente editar */
-  const [loading, setLoading] = useState(true) /* Estado de carga */ 
-  const [saving, setSaving] = useState(false) /* Estado de guardado */
+  const [form, setForm] = useState({ telefono: '', correo: '', departamento: '', ciudad: '' })
+  const [original, setOriginal] = useState(null) /* Datos originales de BD para rollback real */
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
 /* F. Cargar el cliente por id */
@@ -19,12 +20,14 @@ export default function ClienteEditar() {
     const cargar = async () => {
       try {
         const data = await clientesApi.getClienteById(id)
-        setForm({
+        const initial = {
           telefono: data.telefono || '',
           correo: data.correo || '',
           departamento: data.departamento || '',
           ciudad: data.ciudad || ''
-        })
+        }
+        setForm(initial)
+        setOriginal(initial)
       } catch (err) {
         toast.error(err.message)
         navigate('/dashboard')
@@ -38,7 +41,6 @@ export default function ClienteEditar() {
   /* Manejar el submit del formulario */
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const backup = { ...form }
     setSaving(true)
     toast.loading('Guardando...', { id: 'guardar' })
     try {
@@ -51,7 +53,7 @@ export default function ClienteEditar() {
       toast.success('Cliente actualizado', { id: 'guardar' })
       navigate('/dashboard')
     } catch {
-      setForm(backup)
+      if (original) setForm({ ...original })
       toast.error('Error al guardar. Cambios revertidos.', { id: 'guardar' })
     } finally {
       setSaving(false)
