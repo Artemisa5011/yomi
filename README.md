@@ -62,6 +62,7 @@ En Supabase: **SQL Editor** → ejecuta en orden los archivos de `db/`:
 | 20 | `021_get_display_name.sql` | Nombre en header tras login |
 | 21 | `023_crear_empleado_admin_rpc.sql` | RPC guardar empleado al registrar vendedor |
 | 22 | `024_empleados_estado_inactivo.sql` | Estado activo/inactivo vendedores |
+| 23 | `029_solicitudes_contacto.sql` | Formulario de contacto (Inicio) guarda en BD, solo admin ve |
 
 > Ver `docs/MIGRACIONES_DB.md` para el orden completo y descripciones.
 
@@ -99,8 +100,6 @@ npm run supabase:login
 npm run supabase:link
 npm run supabase:deploy
 ```
-
-(O usa `npx supabase` en lugar de los scripts si ya tienes la CLI instalada con Scoop.)
 
 - La función usa `SUPABASE_SERVICE_ROLE_KEY` (se configura automáticamente en Supabase).
 - El deploy incluye `--no-verify-jwt` para evitar 401 del gateway (la función valida auth internamente).
@@ -156,11 +155,13 @@ Abre `http://localhost:5173` en el navegador.
 
 La app implementa CRUD completo para **Clientes** y **Empleados** (vendedores).
 
+> **Nota para evaluadores:** Las 2 entidades con CRUD completo son **Clientes** y **Empleados**. `servicios_funerarios` y `reservas_cementerio` son registros de ventas/transacciones: se crean al vender y se listan en detalle y calendario, pero no tienen editar/eliminar en UI por regla de negocio (las ventas no se modifican ni borran). Ambos tienen C+R+U+D en UI con sus respectivas rutas y APIs.
+
 ### 1. Clientes
 
 | Operación | API | Página / Ruta | Notas |
 |-----------|-----|---------------|-------|
-| **C**reate | `clientesApi.createCliente` | `/clientes/nuevo` (ClienteNuevo) | Tras buscar cédula inexistente en Dashboard |
+| **C**reate | `clientesApi.createCliente` | `/clientes/nuevo` (ClienteNuevo) | Dashboard (buscar cédula) o Admin → Solicitudes → Registrar como cliente |
 | **R**ead | `listClientes`, `getClienteById`, `getClienteByCedula` | Dashboard (lista y búsqueda), `/clientes/detalle/:id` | Detalle incluye servicios y reservas |
 | **U**pdate | `clientesApi.updateCliente` | `/clientes/editar/:id` (ClienteEditar) | Teléfono, correo, departamento, ciudad |
 | **D**elete | `clientesApi.deleteCliente` | Dashboard (botón Eliminar) | Bloqueado si cliente es verdugo (tiene servicios) |
@@ -188,13 +189,22 @@ La app implementa CRUD completo para **Clientes** y **Empleados** (vendedores).
 - [ ] Verificar: Dashboard, Funeraria, Cementerio visibles
 - [ ] Verificar: nombre del usuario visible en header (debajo de Cerrar sesión)
 
-### 2. Ruta protegida
+### 2. Formulario de contacto (Inicio)
+
+- [ ] Ir a Inicio (/) → sección CONTACTO
+- [ ] Completar: nombre, cédula, teléfono, correo, mensaje
+- [ ] ENVIAR → toast éxito, formulario se vacía
+- [ ] Login como admin → Panel Admin
+- [ ] Ver **Solicitudes de contacto**: la fila aparece con estado (Contacto ✓, Cliente ✓/✗, Portal ✓/✗)
+- [ ] Si Cliente ✗: clic "Registrar como cliente" → formulario pre-llenado → guardar
+
+### 3. Ruta protegida
 
 - [ ] Cerrar sesión
 - [ ] Intentar acceder a `/dashboard` → debe redirigir a **Inicio** (/)
 - [ ] La app abre siempre en Inicio; login es opcional desde el menú
 
-### 3. CRUD Clientes
+### 4. CRUD Clientes
 
 - [ ] Login → Dashboard
 - [ ] Buscar cédula inexistente → registrar cliente
@@ -204,7 +214,7 @@ La app implementa CRUD completo para **Clientes** y **Empleados** (vendedores).
 - [ ] Editar cliente (teléfono, correo, departamento, ciudad)
 - [ ] **Eliminar**: cliente sin servicios se puede eliminar; cliente verdugo (con servicios) → botón deshabilitado
 
-### 4. Funeraria
+### 5. Funeraria
 
 - [ ] Buscar cliente activo
 - [ ] Agregar servicios: **Rituales ($100.000)**, **Ofrendas ($500.000)**, **Sombras ($1.000.000)**
@@ -216,7 +226,7 @@ La app implementa CRUD completo para **Clientes** y **Empleados** (vendedores).
 - [ ] Ver calendario con servicios confirmados (Realtime)
 - [ ] Cliente pasa a estado "verdugo" tras comprar
 
-### 5. Cementerio + Test de la Sombra
+### 6. Cementerio + Test de la Sombra
 
 - [ ] Buscar cliente
 - [ ] Responder pregunta de pecado → asignar lote
@@ -227,7 +237,7 @@ La app implementa CRUD completo para **Clientes** y **Empleados** (vendedores).
 - [ ] Ver tabla de reservas con `Resultado espiritual` (pecado dominante)
 - [ ] Verificar: lote no se puede cambiar después del juicio
 
-### 6. Portal cliente (rol 3)
+### 7. Portal cliente (rol 3)
 
 - [ ] Cerrar sesión
 - [ ] "Regístrate como cliente" o ir a `/registro-cliente`
@@ -237,14 +247,15 @@ La app implementa CRUD completo para **Clientes** y **Empleados** (vendedores).
 - [ ] **Mis Difuntos**: servicios funerarios y reservas (solo lectura)
 - [ ] Si no ve nada: admin vincula por cédula en Panel Admin
 
-### 7. Panel Admin
+### 8. Panel Admin
 
 - [ ] Registrar vendedor
 - [ ] Dashboard
 - [ ] **Vendedores**: listar, Editar, Eliminar por completo (sin ventas: borra cuenta; correo liberado), Desactivar/Reactivar (con ventas)
+- [ ] **Solicitudes de contacto**: mensajes enviados desde Inicio (nombre, cédula, teléfono, correo). Si falta "Cliente", botón "Registrar como cliente" → formulario pre-llenado
 - [ ] **Vincular cliente portal**: ingresar cédula para vincular servicios/reservas
 
-### 8. Reglas de negocio
+### 9. Reglas de negocio
 
 - [ ] **Cuentas nuevas**: Admin, vendedor y cliente quedan activas al crearse. Solo el admin puede Desactivar/Reactivar vendedores.
 - [ ] Registrar cliente con cédula duplicada → error
@@ -253,17 +264,17 @@ La app implementa CRUD completo para **Clientes** y **Empleados** (vendedores).
 - [ ] No eliminar cliente verdugo → botón deshabilitado
 - [ ] Vendedor inactivo intenta login → mensaje "Cuenta desactivada"
 
-### 9. Optimistic update con rollback
+### 10. Optimistic update con rollback
 
 Actualización optimista: la UI cambia al instante; si la petición falla, se revierten los cambios y se muestra toast.
 
-| Acción | Dónde | Prueba |
-|--------|-------|--------|
-| Editar cliente (formulario) | ClienteEditar | Guardar con red desconectada → formulario revierte, toast "Cambios revertidos" |
+| Acción | Dónde | Rollback |
+|--------|-------|----------|
+| Editar cliente (formulario) | ClienteEditar | Restaura valores originales de BD (no el estado ya editado) |
 | Editar vendedor (formulario) | EmpleadoEditar | Idem |
-| Eliminar cliente de la lista | Dashboard | Eliminar con red desconectada → cliente vuelve a la lista, toast |
+| Eliminar cliente de la lista | Dashboard | Cliente vuelve a la lista |
 | Eliminar vendedor | Admin | Idem |
-| Desactivar/Reactivar vendedor | Admin | Cambiar estado con red desconectada → estado revierte, toast |
+| Desactivar/Reactivar vendedor | Admin | Estado revierte |
 
 - [ ] Desconectar red (DevTools → Network → Offline)
 - [ ] Probar una acción (editar, eliminar, desactivar)
@@ -326,12 +337,12 @@ git push -u origin main
 | Cambio | Descripción |
 |--------|-------------|
 | **Página inicial** | App abre en Inicio (/). Rutas sin sesión redirigen a Inicio |
-| **Login** | Enlace "Regístrate como cliente". Redirección según rol |
+| **Login** | Enlace "Regístrate como cliente" (solo cliente; vendedores los crea admin). Redirección según rol |
 | **Nombre en header** | Tras login se muestra el nombre del usuario (debajo de Cerrar sesión) |
 | **Registro cliente** | Validación contraseña, cédula duplicada, correo existente |
 | **Detalle cliente** | Datos, servicios funerarios, reservas cementerio |
 | **Mis Difuntos** | Cliente ve servicios y reservas (solo lectura). Vinculación automática o manual |
-| **Panel Admin** | Vendedores (CRUD: Editar, Eliminar/Desactivar), Vincular cliente portal |
+| **Panel Admin** | Vendedores (CRUD), Solicitudes de contacto (Registrar como cliente desde ahí), Vincular cliente portal |
 | **CRUD mínimo** | Clientes y Empleados: Create, Read, Update, Delete (ver sección anterior) |
 | **Cliente verdugo** | No se puede eliminar (FK RESTRICT, botón deshabilitado) |
 | **Vendedor inactivo** | Admin desactiva; no puede ingresar; ventas se conservan |
@@ -339,6 +350,8 @@ git push -u origin main
 | **Scripts db/** | 014-019 base. 020-028: migraciones y correcciones. Ver `docs/MIGRACIONES_DB.md` |
 | **Edge Function delete-vendedor** | Elimina cuenta auth (correo liberado). Deploy con `--no-verify-jwt`. Ver `docs/EDGE_FUNCTION_DELETE_VENDEDOR.md` |
 | **Optimistic update** | Eliminar cliente, vendedor; Editar cliente/vendedor; Desactivar/Reactivar vendedor. Rollback + toast en error |
+| **Formulario de contacto** | Inicio: nombre, cédula, teléfono, correo, mensaje → guarda en `solicitudes_contacto`. Solo admin ve en Panel Admin. Cédula vincula con clientes/portal |
+| **Modales Inicio** | Funeraria/Cementerio: vendedor/admin ve botones "IR A..."; cliente/sin login ven mensaje contextual (Mis Difuntos, Iniciar sesión) |
 
 ---
 
@@ -360,7 +373,7 @@ yomi-no-hana/
 
 | Ruta | Acceso | Descripción |
 |------|--------|-------------|
-| `/` | Público | Inicio (página de aterrizaje) |
+| `/` | Público | Inicio (página de aterrizaje). Formulario CONTACTO guarda en BD (cédula, teléfono) |
 | `/login` | Público | Iniciar sesión |
 | `/registro` | Admin (666) | Registrar vendedor |
 | `/registro-cliente` | Público | Registrar cliente portal |
