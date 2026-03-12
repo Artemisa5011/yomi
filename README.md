@@ -308,6 +308,8 @@ git push -u origin main
 - **Build command**: `npm run build`
 - **Publish directory**: `dist`
 
+El archivo `public/_redirects` hace que Netlify sirva `index.html` para todas las rutas (`/admin`, `/dashboard`, etc.), evitando 404 al refrescar o entrar por URL directa.
+
 ### 4. Variables de entorno
 
 - `VITE_SUPABASE_URL` = `https://tu-proyecto.supabase.co`
